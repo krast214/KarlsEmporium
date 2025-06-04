@@ -1,4 +1,4 @@
-// dice-tower/game/cards.js
+// karls-gaming-emporium/game_dicetower/cards.js
 
 const ESTABLISHMENTS = {
     // --- BLUE CARDS (Income on anyone's turn) ---
@@ -31,7 +31,7 @@ const ESTABLISHMENTS = {
     },
     'mine': {
         id: 'mine', name: 'Mine', cost: 6, type: 'blue', activation: [9],
-        icon: '⛏️', deck: '7-12', initialSupply: 6, // Higher cost, different deck
+        icon: '⛏️', deck: '7-12', initialSupply: 6,
         description: "Get 5 coins from the bank.",
         effect: (player, game, rollerId, activePlayer) => {
             player.coins += 5;
@@ -68,7 +68,7 @@ const ESTABLISHMENTS = {
         description: "Get 3 coins.",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
-                player.coins += 3;
+                player.coins += 3; // Shopping Mall typically doesn't affect fixed income like this
                 return `${player.name} gained 3 coins from Convenience Store.`;
             }
             return null;
@@ -77,7 +77,7 @@ const ESTABLISHMENTS = {
     'cheese_factory': {
         id: 'cheese_factory', name: 'Cheese Factory', cost: 5, type: 'green', activation: [7],
         icon: '🧀', deck: '7-12', initialSupply: 6,
-        description: "Get 3 coins for each 'Ranch' you own.",
+        description: "Get 3 coins for each 'Ranch' (🐄) you own.",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
                 const ranchCount = player.establishments.filter(e => e.id === 'ranch').reduce((sum, est) => sum + est.count, 0);
@@ -93,7 +93,7 @@ const ESTABLISHMENTS = {
     'furniture_factory': {
         id: 'furniture_factory', name: 'Furniture Factory', cost: 3, type: 'green', activation: [8],
         icon: '🛋️', deck: '7-12', initialSupply: 6,
-        description: "Get 3 coins for each 'Forest' you own.",
+        description: "Get 3 coins for each 'Forest' (🌳) you own.",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
                 const forestCount = player.establishments.filter(e => e.id === 'forest').reduce((sum, est) => sum + est.count, 0);
@@ -108,8 +108,8 @@ const ESTABLISHMENTS = {
     },
     'fruit_and_vegetable_market': {
         id: 'fruit_and_vegetable_market', name: 'Fruit and Vegetable Market', cost: 2, type: 'green', activation: [11, 12],
-        icon: '🥕', deck: 'all', initialSupply: 6, // MK1 had this in higher range
-        description: "Get 2 coins for each 'Wheat Field' and 'Apple Orchard' you own.",
+        icon: '🥕', deck: 'all', initialSupply: 6,
+        description: "Get 2 coins for each 'Wheat Field' (🌾) and 'Apple Orchard' (🍎) you own.",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
                 const wheatCount = player.establishments.filter(e => e.id === 'wheat_field').reduce((sum, est) => sum + est.count, 0);
@@ -130,7 +130,7 @@ const ESTABLISHMENTS = {
         id: 'cafe', name: 'Cafe', cost: 2, type: 'red', activation: [3],
         icon: '☕', deck: '1-6', initialSupply: 6,
         description: "Take 1 coin from the player who rolled. (+1 if Shopping Mall built).",
-        effect: (owner, game, rollerId, activePlayer) => {
+        effect: (owner, game, rollerId, activePlayer) => { // activePlayer is the one who rolled
             if (owner.id !== rollerId && activePlayer && activePlayer.coins > 0) {
                 const amount = Math.min((owner.hasShoppingMall ? 2 : 1), activePlayer.coins);
                 activePlayer.coins -= amount;
@@ -146,7 +146,7 @@ const ESTABLISHMENTS = {
         description: "Take 2 coins from the player who rolled.",
         effect: (owner, game, rollerId, activePlayer) => {
              if (owner.id !== rollerId && activePlayer && activePlayer.coins > 0) {
-                const amount = Math.min(2, activePlayer.coins);
+                const amount = Math.min(2, activePlayer.coins); // Shopping Mall doesn't affect this one
                 activePlayer.coins -= amount;
                 owner.coins += amount;
                 return `${owner.name} took ${amount} coin(s) from ${activePlayer.name} via Family Restaurant.`;
@@ -160,7 +160,7 @@ const ESTABLISHMENTS = {
         id: 'stadium', name: 'Stadium', cost: 6, type: 'purple', activation: [6],
         icon: '🏟️', deck: '1-6', initialSupply: 4,
         description: "Get 2 coins from ALL other players.",
-        effect: (player, game, rollerId, activePlayer) => {
+        effect: (player, game, rollerId, activePlayer) => { // activePlayer is the roller (player)
             if (player.id === rollerId) {
                 let totalGained = 0;
                 game.players.forEach(otherPlayer => {
@@ -172,28 +172,25 @@ const ESTABLISHMENTS = {
                     }
                 });
                 if (totalGained > 0) return `${player.name} gained ${totalGained} total coins from other players via Stadium.`;
-                else return `${player.name} activated Stadium, but other players had no coins.`;
+                else return `${player.name} activated Stadium, but other players had no coins or were not present.`;
             }
             return null;
         }
     },
     'tv_station': {
-        id: 'tv_station', name: 'TV Station', cost: 7, type: 'purple', activation: [6], // Often shares activation with Stadium
+        id: 'tv_station', name: 'TV Station', cost: 7, type: 'purple', activation: [6],
         icon: '📺', deck: 'all', initialSupply: 4,
         description: "Take 5 coins from any ONE player of your choice (effect simplified).",
         effect: (player, game, rollerId, activePlayer) => {
              if (player.id === rollerId) {
-                // Simplified: takes from first other player with most coins, or just first other player.
-                // Full implementation needs UI for player to choose.
                 const otherPlayersWithCoins = game.players.filter(p => p.id !== player.id && p.coins > 0);
                 if (otherPlayersWithCoins.length > 0) {
-                    // Sort by coins descending to pick richest, or just pick first for simplicity
-                    otherPlayersWithCoins.sort((a, b) => b.coins - a.coins);
+                    otherPlayersWithCoins.sort((a, b) => b.coins - a.coins); // Target richest for simplicity
                     const targetPlayer = otherPlayersWithCoins[0];
                     const amount = Math.min(5, targetPlayer.coins);
                     targetPlayer.coins -= amount;
                     player.coins += amount;
-                    return `${player.name} took ${amount} coins from ${targetPlayer.name} via TV Station (richest targeted).`;
+                    return `${player.name} took ${amount} coins from ${targetPlayer.name} via TV Station.`;
                 }
                 return `${player.name} activated TV Station, but no target player had coins.`;
             }
@@ -206,17 +203,15 @@ const ESTABLISHMENTS = {
         description: "Trade one non-purple establishment you own with one non-purple establishment an opponent owns (effect simplified).",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
-                // Full trade logic is very complex, involving UI choices for both cards and target player.
-                return `${player.name} activated Business Center. (Full trade effect requires UI selection and is simplified in this version).`;
+                return `${player.name} activated Business Center. (Full trade effect requires UI selections and is simplified here).`;
             }
             return null;
         }
     },
-    // Machi Koro 2 "Mega" cards (often higher cost, different deck)
     'publishers': {
         id: 'publishers', name: 'Publishers', cost: 5, type: 'purple', activation: [7],
         icon: '📰', deck: '7-12', initialSupply: 4,
-        description: "Get 1 coin from each player for every Cafe and Family Restaurant they own.",
+        description: "Get 1 coin from each player for every Cafe (☕) and Family Restaurant (🍝) they own.",
         effect: (player, game, rollerId, activePlayer) => {
             if (player.id === rollerId) {
                 let totalGained = 0;
@@ -270,12 +265,12 @@ const ESTABLISHMENTS = {
 const LANDMARKS = {
     'town_hall': {
         id: 'town_hall', name: 'Town Hall', cost: 0, built: true,
-        description: "Your starting point. No special active effect.",
+        description: "Your starting point. All players begin with this built.",
         onBuild: null
     },
     'train_station': {
         id: 'train_station', name: 'Train Station', cost: 4, built: false,
-        description: "You may choose to roll 1 or 2 dice.",
+        description: "You may choose to roll 1 or 2 dice on your turn.",
         onBuild: (player) => { player.canRollTwoDice = true; }
     },
     'shopping_mall': {
@@ -290,27 +285,22 @@ const LANDMARKS = {
     },
     'radio_tower': {
         id: 'radio_tower', name: 'Radio Tower', cost: 22, built: false,
-        description: "Once during your turn (before or after rolling, or even after income if you wish to change your build options), you may choose to re-roll ALL your dice.",
+        description: "Once during your turn, you may choose to re-roll ALL your dice.",
         onBuild: (player) => { player.canRerollOnce = true; }
     },
-    'harbor': { // Harbor from Machi Koro, often a key early landmark
+    'harbor': {
         id: 'harbor', name: 'Harbor', cost: 2, built: false,
-        description: "If the sum of your dice is 10 or more on your turn, you may add 2 to your roll for the purpose of activating your Green and Blue establishments.",
-        // Note: This effect is a bit tricky. The game logic needs to check this *before* resolving green/blue cards if the sum is 10+.
-        // For simplicity, our current _processIncome checks if player.hasHarbor and rollSum >= 10 for a direct coin bonus.
-        // A more accurate implementation would modify the effective rollSum for specific card types.
+        description: "If the sum of your dice is 10 or more on your turn, you may add 2 to your roll for the purpose of activating your Green and Blue establishments. (Effect simplified: +2 coins on 10+ roll on your turn)",
         onBuild: (player) => { player.hasHarbor = true; },
     },
-    'airport': { // Machi Koro 2 landmark
+    'airport': {
         id: 'airport', name: 'Airport', cost: 30, built: false,
-        description: "If you build the Airport, you immediately gain 10 coins. (No ongoing effect).",
+        description: "When you build the Airport, you immediately gain 10 coins. (No ongoing effect).",
         onBuild: (player) => { player.coins += 10; }
     },
-    // Add one more for MK2 3-landmark win condition target (besides Town Hall)
-    'city_hall': { // Example, could be any other major landmark
+    'city_hall': {
         id: 'city_hall', name: 'City Hall', cost: 7, built: false,
         description: "If you have no coins at the start of your build phase, gain 1 coin from the bank.",
-        // This effect needs to be checked at the start of the build phase.
         onBuild: (player) => { player.hasCityHall = true; } // Flag for game logic to check
     }
 };
@@ -318,7 +308,7 @@ const LANDMARKS = {
 function getInitialLandmarks() {
     return Object.keys(LANDMARKS).map(id => ({
         id: id,
-        built: LANDMARKS[id].cost === 0 // Only Town Hall is built initially
+        built: LANDMARKS[id].cost === 0
     }));
 }
 

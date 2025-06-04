@@ -1,282 +1,251 @@
-// dice-tower/server.js
-require('dotenv').config(); // Load .env variables AT THE VERY TOP
+// karls-gaming-emporium/server.js
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
-const GameState = require('./game/gameState');
-const { ESTABLISHMENTS, LANDMARKS } = require('./game/cards');
 
-// Choose one HTTP request library
-const fetch = require('node-fetch'); // Using node-fetch@2 for CommonJS
-// const axios = require('axios'); // Or using axios
+// Dice Tower Game Specific Logic
+const DiceTowerGameState = require('./game_dicetower/gameState.js'); // Correct path
+const { ESTABLISHMENTS: DT_ESTABLISHMENTS, LANDMARKS: DT_LANDMARKS } = require('./game_dicetower/cards.js'); // Correct path
+
 
 const app = express();
 const server = http.createServer(app);
-
-// Environment variables for Discord OAuth
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI; // The one registered in Dev Portal
-
-if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_REDIRECT_URI) {
-    console.error("FATAL ERROR: Discord OAuth environment variables not set!");
-    // process.exit(1); // Optionally exit if critical config is missing
-}
-
-
-// CORS Configuration
-const allowedOrigins = [
-    "https://discord.com",
-    "https://discordapp.com", // Older, but sometimes still relevant
-    "http://localhost:3000", // Your backend serving frontend locally
-    "http://localhost:1234", // Common port for Parcel dev server if you use it for frontend
-    // Add your ngrok URL for local development if you use it for frontend
-    // e.g., "https://your-ngrok-id.ngrok.io"
-];
-if (process.env.NODE_ENV === 'production' && process.env.DEPLOYED_FRONTEND_URL) {
-    allowedOrigins.push(process.env.DEPLOYED_FRONTEND_URL);
-}
-
-
 const io = new Server(server, {
-    cors: {
-        origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps or curl requests)
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.indexOf(origin) === -1) {
-                const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-                return callback(new Error(msg), false);
-            }
-            return callback(null, true);
-        },
-        methods: ["GET", "POST"],
-        credentials: true
+    cors: { // Basic CORS for development, adjust for production
+        origin: "*", // Allow all for now, restrict in production
+        methods: ["GET", "POST"]
     }
 });
 
-app.use(express.json()); // Middleware to parse JSON request bodies
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// --- OAuth2 Token Exchange Endpoint ---
-app.post('/api/token', async (req, res) => {
-    console.log('Received request on /api/token');
-    try {
-        const { code } = req.body;
-        if (!code) {
-            console.log('Missing authorization code in /api/token request');
-            return res.status(400).json({ error: 'Missing authorization code' });
-        }
-
-        console.log(`Exchanging code: ${code.substring(0, 10)}... for an access token`);
-
-        const params = new URLSearchParams();
-        params.append('client_id', DISCORD_CLIENT_ID);
-        params.append('client_secret', DISCORD_CLIENT_SECRET);
-        params.append('grant_type', 'authorization_code');
-        params.append('code', code);
-        params.append('redirect_uri', DISCORD_REDIRECT_URI); // Must match EXACTLY what's in Dev Portal
-
-        // Using node-fetch
-        const discordResponse = await fetch('https://discord.com/api/oauth2/token', {
-            method: 'POST',
-            body: params,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        });
-
-        /* // Alternative using axios
-        const discordResponse = await axios.post('https://discord.com/api/oauth2/token', params, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        });
-        const tokenData = discordResponse.data; // axios wraps response in .data
-        */
-
-        const tokenData = await discordResponse.json(); // For node-fetch
-
-        if (tokenData.error || !tokenData.access_token) {
-            console.error('Discord token exchange error:', tokenData.error, tokenData.error_description);
-            return res.status(discordResponse.status || 400).json({
-                error: 'Failed to exchange token with Discord',
-                details: tokenData.error_description || tokenData.error
-            });
-        }
-
-        console.log('Successfully exchanged code for access token.');
-        res.json({ access_token: tokenData.access_token });
-
-    } catch (error) {
-        console.error('Error in /api/token endpoint:', error);
-        res.status(500).json({ error: 'Internal server error during token exchange' });
-    }
-});
-
-
-// Serve index.html for the root if not handled by static middleware for SPA-like behavior
+// Serve the main emporium page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Serve the Dice Tower game page
+app.get('/games/dicetower/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'games', 'dicetower', 'index.html'));
+});
+// Serve Dice Tower client.js if requested directly (though typically included by its HTML)
+app.get('/games/dicetower/client.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'games', 'dicetower', 'client.js'));
+});
+app.get('/games/dicetower/style.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'games', 'dicetower', 'style.css'));
+});
 
-const activeGames = {};
 
-function getFullGameState(gameInstance) {
-    // ... (getFullGameState function from previous step) ...
+const rooms = {}; // Stores active rooms: { roomCode: roomData }
+const PLAYER_COLORS = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#F4D03F', '#7D3C98', '#1ABC9C', '#E74C3C'];
+
+function generateRoomCode() {
+    let code = '';
+    const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+    for (let i = 0; i < 5; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    // Ensure code is unique (though collision is rare for short-lived rooms)
+    while(rooms[code]) {
+        code = '';
+        for (let i = 0; i < 5; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+    }
+    return code;
+}
+
+function getFullDiceTowerGameState(gameInstance) {
     if (!gameInstance) return null;
-    return { ...gameInstance, gameData: { ESTABLISHMENTS, LANDMARKS } };
+    // Make sure all necessary game state parts are included for the client
+    // The ...gameInstance spread should capture all its properties.
+    return { ...gameInstance, gameData: { ESTABLISHMENTS: DT_ESTABLISHMENTS, LANDMARKS: DT_LANDMARKS } };
 }
 
 
 io.on('connection', (socket) => {
-    // ... (io.on('connection') logic from previous step, no changes needed here for /api/token) ...
-    // Ensure `authenticateAndJoin` correctly uses the user data passed from client.js
-    // which now originates from the Discord SDK after successful /api/token flow.
-    console.log('User connected via socket:', socket.id);
+    console.log('User connected:', socket.id);
+    let currentRoomCodeForSocket = null; // Room this specific socket is associated with
 
-    socket.on('authenticateAndJoin', async ({ gameId, user }) => { // gameId is channel_id from SDK
-        console.log(`Auth attempt for game ${gameId} by user ${user.username} (${user.id})`);
-
-        if (!gameId || !user || !user.id || !user.username) {
-            socket.emit('gameError', { message: 'Missing game or user information for authentication.' });
-            return;
+    socket.on('createRoom', ({ playerName, maxPlayers }) => {
+        if (!playerName || playerName.trim() === "") {
+            return socket.emit('lobbyError', { message: "Please enter your name." });
         }
-        
-        socket.data.userId = user.id; 
-        socket.data.gameId = gameId;   
-
-        let game = activeGames[gameId];
-        if (!game) {
-            console.log(`Creating new game for instance/channel: ${gameId}`);
-            game = new GameState(gameId);
-            activeGames[gameId] = game;
+        playerName = playerName.trim().substring(0, 20); // Max length
+        maxPlayers = parseInt(maxPlayers, 10);
+        if (isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 4) { // Max 4 players for Dice Tower
+            return socket.emit('lobbyError', { message: "Invalid number of players (2-4)." });
         }
 
-        const joinResult = game.addPlayer({
-            id: user.id,
-            username: user.username,
-            avatar: user.avatar 
-        });
+        const roomCode = generateRoomCode();
+        currentRoomCodeForSocket = roomCode;
 
-        if (joinResult.success) {
-            socket.join(gameId); 
-            console.log(`${user.username} (${user.id}) successfully joined/rejoined game ${gameId}. Players: ${game.players.length}`);
-            
-            socket.emit('gameJoined', {
-                gameId: gameId,
-                playerId: user.id, 
-                gameState: getFullGameState(game)
-            });
-            io.to(gameId).emit('gameStateUpdate', getFullGameState(game));
+        rooms[roomCode] = {
+            code: roomCode,
+            hostId: socket.id,
+            players: [{ id: socket.id, name: playerName, color: PLAYER_COLORS[0] }],
+            maxPlayers: maxPlayers,
+            gameType: 'dicetower',
+            gameStarted: false,
+            diceTowerGame: null
+        };
 
-            if (joinResult.gameStarted) {
-                 console.log(`Game ${gameId} was already started or started now.`);
-            }
-
-        } else {
-            socket.emit('gameError', { message: joinResult.message || "Failed to join game." });
-            console.log(`Failed to join game ${gameId} for ${user.username}: ${joinResult.message}`);
-        }
+        socket.join(roomCode);
+        socket.emit('roomCreated', { roomCode, roomData: rooms[roomCode] });
+        console.log(`Room ${roomCode} created by ${playerName} (Host: ${socket.id}) for ${maxPlayers} players.`);
     });
 
-
-    socket.on('playerAction', ({ actionType, payload }) => {
-        // ... (playerAction logic from previous step) ...
-        const gameId = socket.data.gameId;
-        const userId = socket.data.userId; // Discord User ID
-        const game = activeGames[gameId];
-
-        if (!game) {
-            socket.emit('actionError', { message: "Game instance not found." });
-            return;
+    socket.on('joinRoom', ({ roomCode, playerName }) => {
+        roomCode = roomCode.toUpperCase().trim();
+        if (!playerName || playerName.trim() === "") {
+            return socket.emit('lobbyError', { message: "Please enter your name." });
         }
-        if (!game.players.find(p => p.id === userId)) {
-            socket.emit('actionError', { message: "You are not recognized in this game." });
-            return;
+        playerName = playerName.trim().substring(0, 20);
+        if (!roomCode) {
+            return socket.emit('lobbyError', { message: "Please enter a room code." });
         }
-        if (game.turnPhase !== 'waiting_for_players' && game.turnPhase !== 'game_over' &&
-            actionType !== 'getPlayerState' && game.getCurrentPlayer()?.id !== userId) {
+
+        const room = rooms[roomCode];
+        if (!room) return socket.emit('lobbyError', { message: "Room not found." });
+        if (room.gameStarted) return socket.emit('lobbyError', { message: "Game has already started." });
+        if (room.players.length >= room.maxPlayers) return socket.emit('lobbyError', { message: "Room is full." });
+        if (room.players.find(p => p.id === socket.id)) return socket.emit('lobbyError', { message: "You are already in this room." });
+
+        currentRoomCodeForSocket = roomCode;
+        const playerColor = PLAYER_COLORS[room.players.length % PLAYER_COLORS.length];
+        room.players.push({ id: socket.id, name: playerName, color: playerColor });
+
+        socket.join(roomCode);
+        socket.emit('joinedRoom', { roomCode, roomData: room });
+        io.to(roomCode).emit('playerJoined', { roomData: room }); // Use 'playerJoined' for existing players
+        console.log(`${playerName} (${socket.id}) joined Room ${roomCode}. Players: ${room.players.length}/${room.maxPlayers}`);
+    });
+
+    socket.on('startGame', ({ roomCode }) => {
+        const room = rooms[roomCode];
+        if (!room || room.hostId !== socket.id) return socket.emit('lobbyError', { message: "Only host can start." });
+        if (room.players.length < 2) return socket.emit('lobbyError', { message: "Need at least 2 players." });
+        if (room.gameStarted) return;
+
+        room.gameStarted = true;
+        if (room.gameType === 'dicetower') {
+            room.diceTowerGame = new DiceTowerGameState(roomCode, room.maxPlayers);
+            room.players.forEach((lobbyPlayer) => {
+                room.diceTowerGame.addPlayer({
+                    id: lobbyPlayer.id,
+                    name: lobbyPlayer.name,
+                    color: lobbyPlayer.color
+                });
+            });
+            if (!room.diceTowerGame.startGame()) { // If gameState.startGame fails for some reason
+                room.gameStarted = false; // Revert
+                return socket.emit('lobbyError', { message: "Failed to initialize game state."});
+            }
+        }
+
+        io.to(roomCode).emit('gameStarted', {
+            gameType: room.gameType,
+            gameState: room.gameType === 'dicetower' ? getFullDiceTowerGameState(room.diceTowerGame) : null
+        });
+        console.log(`Game ${room.gameType} started in Room ${roomCode}.`);
+    });
+
+    socket.on('diceTowerAction', ({ actionType, payload }) => {
+        const roomCode = currentRoomCodeForSocket; // Use the room associated with this socket
+        if (!roomCode || !rooms[roomCode] || !rooms[roomCode].diceTowerGame || !rooms[roomCode].gameStarted) {
+            return socket.emit('actionError', { message: "Game not active or not in a Dice Tower game." });
+        }
+        const room = rooms[roomCode];
+        const game = room.diceTowerGame;
+        const requestingPlayerId = socket.id;
+
+        // Centralized turn check
+        const currentPlayerInGame = game.getCurrentPlayer();
+        if (!currentPlayerInGame) {
+            return socket.emit('actionError', { message: "Game error: current player not set."});
+        }
+        if (actionType !== 'getPlayerState' && currentPlayerInGame.id !== requestingPlayerId) {
             if (['rollDice', 'buyEstablishment', 'buildLandmark', 'passTurn', 'rerollDice'].includes(actionType)) {
-                socket.emit('actionError', { message: "Not your turn!" });
-                return;
+                return socket.emit('actionError', { message: "Not your turn!" });
             }
         }
         if (game.turnPhase === 'game_over' && actionType !== 'getPlayerState') {
-            socket.emit('actionError', { message: "Game is over." });
-            return;
+             return socket.emit('actionError', { message: "Game is over."});
         }
+
 
         let result;
         switch (actionType) {
-            case 'rollDice': result = game.rollDice(userId, payload.numDice); break;
-            case 'rerollDice': result = game.rerollDice(userId); break;
-            case 'buyEstablishment': result = game.buyEstablishment(userId, payload.cardId, payload.marketRowKey); break;
-            case 'buildLandmark': result = game.buildLandmark(userId, payload.landmarkId); break;
-            case 'passTurn': result = game.passTurn(userId); break;
-            case 'startGame': 
-                if (game.players.length > 0 && (game.players[0]?.id === userId || game.getCurrentPlayer()?.id === userId)) { 
-                     if(game.startGame()) {
-                        result = "Game started by player.";
-                     } else {
-                        result = "Could not start game (check player count).";
-                     }
-                } else {
-                    result = "Only an active player can start the game once minimum players are met.";
-                }
-                break;
-            case 'getPlayerState': 
-                io.to(gameId).emit('gameStateUpdate', getFullGameState(game)); 
+            case 'rollDice': result = game.rollDice(requestingPlayerId, payload.numDice); break;
+            case 'rerollDice': result = game.rerollDice(requestingPlayerId); break;
+            case 'buyEstablishment': result = game.buyEstablishment(requestingPlayerId, payload.cardId, payload.marketRowKey); break;
+            case 'buildLandmark': result = game.buildLandmark(requestingPlayerId, payload.landmarkId); break;
+            case 'passTurn': result = game.passTurn(requestingPlayerId); break;
+            case 'getPlayerState':
+                socket.emit('gameStateUpdate', getFullDiceTowerGameState(game));
                 return;
             default:
-                socket.emit('actionError', { message: 'Unknown action.' });
-                return;
+                return socket.emit('actionError', { message: 'Unknown Dice Tower action.' });
         }
 
-        if (typeof result === 'string' && !result.startsWith("Rolled") && !result.startsWith("Rerolling...") && !result.startsWith("Game started")) {
+        // Check result type for error messages
+        if (typeof result === 'string' && !result.startsWith("Rolled") && !result.startsWith("Rerolling...")) {
             socket.emit('actionError', { message: result });
         } else {
-            io.to(gameId).emit('gameStateUpdate', getFullGameState(game));
+            io.to(roomCode).emit('gameStateUpdate', getFullDiceTowerGameState(game));
             if (game.winner) {
-                io.to(gameId).emit('gameOver', { winnerName: game.winner.name });
+                io.to(roomCode).emit('gameOver', { winnerName: game.winner.name });
             }
         }
     });
 
     socket.on('disconnect', () => {
-        // ... (disconnect logic from previous step) ...
-        const gameId = socket.data.gameId;
-        const userId = socket.data.userId;
-        console.log(`User ${userId} disconnected from game ${gameId}`);
+        console.log('User disconnected:', socket.id);
+        const roomCode = currentRoomCodeForSocket; // Find which room this socket was in
 
-        if (gameId && activeGames[gameId] && userId) {
-            const game = activeGames[gameId];
-            const playerWasInGame = game.players.some(p => p.id === userId);
-            
-            game.removePlayer(userId); 
+        if (roomCode && rooms[roomCode]) {
+            const room = rooms[roomCode];
+            const playerIndex = room.players.findIndex(p => p.id === socket.id);
 
-            if (playerWasInGame) {
-                 io.to(gameId).emit('gameStateUpdate', getFullGameState(game)); 
-            }
+            if (playerIndex !== -1) {
+                const disconnectedPlayer = room.players.splice(playerIndex, 1)[0];
+                console.log(`${disconnectedPlayer.name} left room ${roomCode}`);
 
-            if (game.players.length === 0 && game.turnPhase !== 'waiting_for_players') { // Don't delete if it just went back to waiting
-                console.log(`Game instance ${gameId} is now empty after being active. Deleting.`);
-                delete activeGames[gameId];
-            } else if (game.players.length === 0 && game.turnPhase === 'waiting_for_players') {
-                console.log(`Game instance ${gameId} became empty while waiting for players. Deleting.`);
-                delete activeGames[gameId];
+                if (room.gameStarted && room.diceTowerGame) {
+                    const gameStillViable = room.diceTowerGame.removePlayer(disconnectedPlayer.id);
+                    io.to(roomCode).emit('gameStateUpdate', getFullDiceTowerGameState(room.diceTowerGame));
+
+                    if (room.diceTowerGame.players.length < 2 && room.diceTowerGame.turnPhase !== 'game_over') {
+                        room.diceTowerGame.turnPhase = 'game_over';
+                        room.diceTowerGame.winner = null;
+                        io.to(roomCode).emit('gameOver', { message: "Game ended: player disconnected."});
+                        console.log(`Game in room ${roomCode} ended due to disconnect, not enough players.`);
+                        // Optionally delete room after a delay or if all leave
+                        // if (room.players.length === 0) delete rooms[roomCode];
+                    }
+                } else if (!room.gameStarted) { // Player left lobby
+                    io.to(roomCode).emit('playerLeftLobby', { roomData: room, disconnectedPlayerId: socket.id });
+                }
+
+                // Handle host leaving
+                if (room.hostId === socket.id && room.players.length > 0) {
+                    room.hostId = room.players[0].id; // New host is the next player in list
+                    io.to(roomCode).emit('hostChanged', { newHostId: room.hostId, roomData: room });
+                    console.log(`New host for room ${roomCode}: ${room.players[0].name}`);
+                }
+
+                if (room.players.length === 0) {
+                    console.log(`Room ${roomCode} is empty. Deleting.`);
+                    delete rooms[roomCode];
+                }
             }
         }
     });
 });
 
-
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Dice Tower Discord Activity server listening on *:${PORT}`);
-    console.log(`Ensure your Discord App's Activity URL uses HTTPS and points here.`);
-    console.log(`CLIENT_ID used for SDK: ${DISCORD_CLIENT_ID ? DISCORD_CLIENT_ID.substring(0,5)+'...' : 'NOT SET'}`);
-    console.log(`REDIRECT_URI for OAuth: ${DISCORD_REDIRECT_URI || 'NOT SET'}`);
+    console.log(`Karl's Gaming Emporium server listening on *:${PORT}`);
 });

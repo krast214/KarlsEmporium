@@ -1,25 +1,26 @@
-// dice-tower/game/gameState.js
-const { ESTABLISHMENTS, LANDMARKS, getInitialLandmarks } = require('./cards'); // Ensure this path is correct
-
-const MAX_PLAYERS = 4; // New constant
+// karls-gaming-emporium/game_dicetower/gameState.js
+const { ESTABLISHMENTS, LANDMARKS, getInitialLandmarks } = require('./cards');
 
 class Player {
-    constructor(id, name, avatarUrl = null) { // Added avatarUrl
-        this.id = id; // Discord User ID
-        this.name = name; // Discord Username
-        this.avatarUrl = avatarUrl; // Discord Avatar URL
+    constructor(id, name, color = '#cccccc', avatarUrl = null) { // Added color, avatarUrl
+        this.id = id; // This will be the socket.id from the lobby
+        this.name = name;
+        this.color = color; // Store player color
+        this.avatarUrl = avatarUrl; // Optional avatar
         this.coins = 3;
-        this.establishments = [];
+        this.establishments = []; // [{id: 'wheat_field', count: 1}, ...]
         this.landmarks = getInitialLandmarks();
 
+        // Abilities from landmarks
         this.canRollTwoDice = false;
         this.hasShoppingMall = false;
         this.canTakeExtraTurnOnDoubles = false;
         this.canRerollOnce = false;
         this.hasUsedRerollThisTurn = false;
         this.hasHarbor = false;
+        this.hasCityHall = false; // For City Hall landmark
 
-        // Initial establishments (can be varied based on player order or game rules)
+        // Initial establishments
         this.establishments.push({ id: 'wheat_field', count: 1 });
         this.establishments.push({ id: 'bakery', count: 1 });
     }
@@ -60,19 +61,19 @@ function shuffleArray(array) {
     }
 }
 
-class GameState {
-    constructor(gameId) { // gameId will now be the Discord channel_id
-        this.gameId = gameId;
-        this.players = [];
+class DiceTowerGameState {
+    constructor(gameId, maxPlayers = 4) { // gameId is roomCode, add maxPlayers
+        this.gameId = gameId; // Typically the room code
+        this.maxPlayersInThisGameInstance = maxPlayers;
+        this.players = []; // Stores Player objects for this game instance
         this.playerOrder = []; // Stores IDs in turn order
-        this.currentPlayerId = null; // Will be set to the ID of the current player
+        this.currentPlayerId = null;
         this.diceRoll = null;
         this.diceSum = 0;
-        this.turnPhase = 'waiting_for_players';
-        this.gameLog = [`Game instance ${gameId} created. Waiting for players...`];
+        this.turnPhase = 'waiting_for_players'; // Game doesn't start itself, server's lobby logic does
+        this.gameLog = [`Dice Tower game instance for room ${gameId} created.`];
         this.winner = null;
         this.extraTurnTakenThisRoll = false;
-        this.minPlayersToStart = 2; // Can be adjusted
 
         this.cardSupply = {};
         this.decks = { '1-6': [], '7-12': [], 'all': [] };
@@ -126,78 +127,84 @@ class GameState {
         this._fillMarketRow(rowKey, 5);
     }
 
-    addPlayer(playerData) { // playerData: { id, username, avatar } from Discord SDK
-        if (this.players.length >= MAX_PLAYERS) {
-            return { success: false, message: "Game is full." };
-        }
+    addPlayer(playerData) { // playerData: { id (socketId), name, color, avatarUrl (optional) }
+        // Max player check is handled by server lobby now
+        // if (this.players.length >= this.maxPlayersInThisGameInstance) {
+        //     return { success: false, message: "Game instance is full." };
+        // }
         if (this.players.find(p => p.id === playerData.id)) {
-            return { success: true, message: "Player already in game.", player: this.players.find(p => p.id === playerData.id) }; // Rejoining
-        }
-        if (this.turnPhase !== 'waiting_for_players') {
-            return { success: false, message: "Game has already started."};
+             return { success: true, message: "Player already in game instance.", player: this.players.find(p => p.id === playerData.id) };
         }
 
-        const newPlayer = new Player(playerData.id, playerData.username, playerData.avatar);
+        const newPlayer = new Player(playerData.id, playerData.name, playerData.color, playerData.avatarUrl);
         this.players.push(newPlayer);
-        this.gameLog.push(`${newPlayer.name} has joined the game.`);
-
-        // Attempt to start game if enough players
-        if (this.players.length >= this.minPlayersToStart && this.turnPhase === 'waiting_for_players') {
-            // This logic might be better triggered by a "start game" command from a player
-            // For now, auto-start when minPlayers is met.
-            this.startGame();
-        }
-        return { success: true, player: newPlayer, gameStarted: this.turnPhase !== 'waiting_for_players' };
+        this.gameLog.push(`${newPlayer.name} (color: ${newPlayer.color}) added to Dice Tower game.`);
+        return { success: true, player: newPlayer };
     }
 
     removePlayer(playerId) {
         const playerIndex = this.players.findIndex(p => p.id === playerId);
         if (playerIndex > -1) {
             const removedPlayer = this.players.splice(playerIndex, 1)[0];
-            this.gameLog.push(`${removedPlayer.name} has left the game.`);
+            this.gameLog.push(`${removedPlayer.name} removed from Dice Tower game.`);
 
-            // If game was in progress, handle turn advancement or game ending
-            if (this.turnPhase !== 'waiting_for_players' && this.turnPhase !== 'game_over') {
-                if (this.players.length < this.minPlayersToStart) {
-                    this.gameLog.push("Not enough players to continue. Game paused/ended.");
-                    this.turnPhase = 'game_over'; // Or a new 'paused' state
-                    this.winner = null; // No winner
-                } else if (removedPlayer.id === this.currentPlayerId) {
-                    // If the current player left, advance turn carefully
-                    this.playerOrder = this.players.map(p => p.id); // Rebuild player order
-                    const currentTurnPlayerIndexInOrder = this.playerOrder.indexOf(this.currentPlayerId);
-                     // This needs more robust logic to pick next player if current one leaves
-                    this.currentPlayerId = this.playerOrder[currentTurnPlayerIndexInOrder % this.playerOrder.length]; // Simple next
-                    this.gameLog.push(`It's now ${this.getCurrentPlayer()?.name}'s turn.`);
-                }
+            // Remove from playerOrder as well
+            const orderIndex = this.playerOrder.indexOf(playerId);
+            if (orderIndex > -1) {
+                this.playerOrder.splice(orderIndex, 1);
             }
-            // If waiting and now below min, stay waiting
+
+            if (this.turnPhase !== 'game_over' && this.players.length > 0) {
+                if (playerId === this.currentPlayerId) {
+                    // If current player left, advance to next in new order
+                    if (this.playerOrder.length > 0) {
+                        const nextPlayerIndexInOrder = orderIndex % this.playerOrder.length; // Get next valid index
+                        this.currentPlayerId = this.playerOrder[nextPlayerIndexInOrder];
+                        this.turnPhase = 'roll';
+                        this.diceRoll = null; this.diceSum = 0; this.extraTurnTakenThisRoll = false;
+                        this.getCurrentPlayer().hasUsedRerollThisTurn = false;
+                        this.gameLog.push(`Current player left. It's now ${this.getCurrentPlayer().name}'s turn.`);
+                    } else { // No players left in order
+                        this.turnPhase = 'game_over';
+                        this.winner = null;
+                        this.gameLog.push("All players left. Game over.");
+                    }
+                }
+            } else if (this.players.length === 0) {
+                 this.turnPhase = 'game_over';
+                 this.winner = null;
+                 this.gameLog.push("No players remaining. Game over.");
+            }
             return true;
         }
         return false;
     }
 
-
-    startGame() {
-        if (this.players.length < this.minPlayersToStart || this.turnPhase !== 'waiting_for_players') {
-            this.gameLog.push("Cannot start game: not enough players or game already started.");
+    startGame() { // Called by server after lobby setup
+        if (this.players.length < 2 || this.turnPhase !== 'waiting_for_players') {
+            this.gameLog.push("Dice Tower Game: Cannot start - invalid state or player count.");
+            console.log(`[DEBUG] startGame failed: players=${this.players.length}, turnPhase=${this.turnPhase}`);
             return false;
         }
         this.playerOrder = this.players.map(p => p.id);
-        shuffleArray(this.playerOrder); // Randomize turn order
+        // shuffleArray(this.playerOrder); // Removed to make host always start
         this.currentPlayerId = this.playerOrder[0];
         this.turnPhase = 'roll';
-        this.gameLog.push("Game started! Player order: " + this.playerOrder.map(id => this.players.find(p=>p.id===id).name).join(', '));
+        this.gameLog.push("Dice Tower game officially started! Player order: " + this.playerOrder.map(id => this.players.find(p=>p.id===id).name).join(', '));
         this.gameLog.push(`It's ${this.getCurrentPlayer().name}'s turn to roll.`);
+        console.log(`[DEBUG] startGame: playerOrder=${JSON.stringify(this.playerOrder)}, currentPlayerId=${this.currentPlayerId}, turnPhase=${this.turnPhase}`);
         return true;
     }
 
     getCurrentPlayer() {
-        return this.players.find(p => p.id === this.currentPlayerId);
+        const player = this.players.find(p => p.id === this.currentPlayerId);
+        if (!player) console.log(`[DEBUG] getCurrentPlayer: No player found for currentPlayerId=${this.currentPlayerId}`);
+        return player;
     }
 
     rollDice(requestingPlayerId, numDice = 1) {
         const player = this.getCurrentPlayer();
+        console.log(`[DEBUG] rollDice: requestingPlayerId=${requestingPlayerId}, currentPlayerId=${this.currentPlayerId}, turnPhase=${this.turnPhase}`);
         if (!player || player.id !== requestingPlayerId || this.turnPhase !== 'roll') return "Not your turn or not roll phase.";
         if (numDice === 2 && !player.canRollTwoDice) return "You cannot roll two dice yet (build Train Station).";
 
@@ -213,25 +220,40 @@ class GameState {
         this.gameLog.push(`${player.name} rolled ${this.diceRoll.join(' + ')} = ${this.diceSum}.`);
         this._processIncome(this.diceSum, player);
         this.turnPhase = 'build';
+        console.log(`[DEBUG] rollDice: player=${player.name}, diceRoll=${JSON.stringify(this.diceRoll)}, diceSum=${this.diceSum}, nextPhase=${this.turnPhase}`);
         return `Rolled ${this.diceSum}.`;
     }
 
     rerollDice(requestingPlayerId) {
         const player = this.getCurrentPlayer();
+        console.log(`[DEBUG] rerollDice: requestingPlayerId=${requestingPlayerId}, currentPlayerId=${this.currentPlayerId}, turnPhase=${this.turnPhase}`);
         if (!player || player.id !== requestingPlayerId || this.turnPhase !== 'build' || !player.canRerollOnce || player.hasUsedRerollThisTurn) {
             return "Cannot reroll now.";
         }
         player.hasUsedRerollThisTurn = true;
         this.turnPhase = 'roll';
         this.gameLog.push(`${player.name} chose to reroll their dice.`);
-        this.diceRoll = null;
-        this.diceSum = 0;
+        this.diceRoll = null; this.diceSum = 0;
+        console.log(`[DEBUG] rerollDice: player=${player.name}, nextPhase=${this.turnPhase}`);
         return "Rerolling... please roll again.";
     }
 
     _processIncome(rollSum, activePlayer) {
         let incomeMessages = [];
         const rollerId = activePlayer.id;
+
+        // City Hall effect (start of build phase, but income happens before build)
+        // This should ideally be checked *before* build phase is entered,
+        // or if player.coins === 0 at start of income resolution *after* red cards.
+        // For now, let's check it here if they have city hall and coins are 0.
+        if (activePlayer.hasCityHall && activePlayer.coins === 0 && this.turnPhase !== 'roll' /* about to enter build */) {
+             // Check if it's ACTUALLY their turn and they are the active player, to avoid giving on opponent's roll if City Hall were blue
+            if(activePlayer.id === rollerId){
+                activePlayer.coins += 1;
+                incomeMessages.push(`${activePlayer.name} gained 1 coin from City Hall (0 coins at start of turn/build).`);
+            }
+        }
+
 
         if (activePlayer.hasHarbor && rollSum >= 10) {
             activePlayer.coins += 2;
@@ -289,6 +311,7 @@ class GameState {
 
     buyEstablishment(requestingPlayerId, cardId, marketRowKey) {
         const player = this.getCurrentPlayer();
+        console.log(`[DEBUG] buyEstablishment: requestingPlayerId=${requestingPlayerId}, currentPlayerId=${this.currentPlayerId}, turnPhase=${this.turnPhase}`);
         if (!player || player.id !== requestingPlayerId || this.turnPhase !== 'build') return "Not your turn or not build phase.";
         const cardData = ESTABLISHMENTS[cardId];
         if (!cardData) return "Card not found.";
@@ -317,7 +340,7 @@ class GameState {
 
         if (player.buildLandmark(landmarkId)) {
             this.gameLog.push(`${player.name} built ${landmarkData.name}.`);
-            if (player.getBuiltLandmarksCount() >= 3) { // Win condition: 3 major landmarks
+            if (player.getBuiltLandmarksCount() >= 3) { // Win: 3 purchased landmarks
                 this.winner = player;
                 this.turnPhase = 'game_over';
                 this.gameLog.push(`${player.name} has built 3 major landmarks and wins the game!`);
@@ -353,13 +376,27 @@ class GameState {
             this.currentPlayerId = this.playerOrder[nextPlayerIndexInOrder];
 
             this.turnPhase = 'roll';
-            this.diceRoll = null;
-            this.diceSum = 0;
-            this.extraTurnTakenThisRoll = false;
-            this.getCurrentPlayer().hasUsedRerollThisTurn = false;
-            this.gameLog.push(`It's ${this.getCurrentPlayer().name}'s turn.`);
+            this.diceRoll = null; this.diceSum = 0; this.extraTurnTakenThisRoll = false;
+            if (this.getCurrentPlayer()) { // Ensure player exists after potential removal
+                this.getCurrentPlayer().hasUsedRerollThisTurn = false;
+                this.gameLog.push(`It's ${this.getCurrentPlayer().name}'s turn.`);
+            } else if (this.players.length > 0 && this.playerOrder.length > 0) {
+                // This case implies playerOrder might be out of sync or currentPlayerId was invalid
+                // Attempt to recover or end game
+                this.currentPlayerId = this.playerOrder[0]; // Fallback to first in order
+                if (this.getCurrentPlayer()) {
+                    this.getCurrentPlayer().hasUsedRerollThisTurn = false;
+                    this.gameLog.push(`Fallback: It's ${this.getCurrentPlayer().name}'s turn.`);
+                } else {
+                    this.turnPhase = 'game_over'; this.winner = null;
+                    this.gameLog.push("Error advancing turn: No valid next player. Game over.");
+                }
+            } else { // No players left or order is empty
+                 this.turnPhase = 'game_over'; this.winner = null;
+                 this.gameLog.push("No players to continue. Game over.");
+            }
         }
     }
 }
 
-module.exports = GameState;
+module.exports = DiceTowerGameState; // Export class

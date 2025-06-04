@@ -1,15 +1,13 @@
 {
-  "name": "dice-tower-discord",
+  "name": "karls-gaming-emporium",
   "version": "1.0.0",
-  "description": "A Discord Activity version of Dice Tower.",
+  "description": "A web-based gaming portal.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "axios": "^1.9.0",
-    "dotenv": "^16.5.0",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2"
+    "express": "^4.17.1", 
+    "socket.io": "^4.3.1" 
   }
 }

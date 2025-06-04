@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Tower - Game Room</title>
+    <link rel="stylesheet" href="/games/dicetower/style.css"> <!-- Dice Tower specific styles -->
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <span id="dicetower-icon"></span>
+            <h1>Dice Tower</h1>
+            <div id="room-info">Room Code: <span id="room-code-display">N/A</span></div>
+            <button id="help-button" class="game-button utility-button" style="display:none;">Help / Rules</button>
+        </header>
+
+        <!-- Lobby Section -->
+        <section id="lobby-section">
+            <div id="create-join-forms">
+                <div id="host-actions">
+                    <h2>Host Game</h2>
+                    <label for="player-name-host">Your Name:</label>
+                    <input type="text" id="player-name-host" placeholder="Enter your name">
+                    <label for="player-count-select">Max Players (2-4):</label>
+                    <select id="player-count-select">
+                        <option value="2">2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4">4 Players</option>
+                    </select>
+                    <button id="create-room-btn" class="game-button">Create Room</button>
+                </div>
+                <div class="or-divider">OR</div>
+                <div id="join-actions">
+                    <h2>Join Game</h2>
+                    <label for="player-name-join">Your Name:</label>
+                    <input type="text" id="player-name-join" placeholder="Enter your name">
+                    <label for="room-code-input">Room Code:</label>
+                    <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="5">
+                    <button id="join-room-btn" class="game-button">Join Room</button>
+                </div>
+            </div>
+
+            <div id="lobby-waiting-area" style="display: none;">
+                <h2>Lobby: <span id="lobby-room-code"></span></h2>
+                <p id="waiting-message">Waiting for players...</p>
+                <div id="lobby-player-list">
+                    <!-- Player list will be populated here -->
+                </div>
+                <button id="start-game-btn" class="game-button" style="display: none;" disabled>Start Game</button>
+            </div>
+            <div id="lobby-error-message" class="error-text" style="display: none;"></div>
+        </section>
+
+        <!-- Game Board Section (initially hidden) -->
+        <main id="game-content-area" style="display: none;">
+            <section id="players-section">
+                <h2>Players</h2>
+                <div id="players-area-flex-container"></div>
+            </section>
+            <section id="market-section">
+                <h2>Market</h2>
+                <div class="market-row-container">
+                    <div id="market-row-1-6" class="market-row"><h3>Dice 1-6</h3><div class="card-display-area"></div></div>
+                    <div id="market-row-7-12" class="market-row"><h3>Dice 7-12</h3><div class="card-display-area"></div></div>
+                    <div id="market-row-all" class="market-row"><h3>Other</h3><div class="card-display-area"></div></div>
+                </div>
+            </section>
+            <aside id="actions-and-log-section">
+                <div id="player-actions">
+                    <h2 id="current-turn-indicator">Current Turn:</h2>
+                    <div id="dice-roll-area"> Dice Result: <span id="dice-result">N/A</span> <div class="action-buttons"> <button id="roll-1-dice-btn" class="game-button" disabled>Roll 1 Die</button> <button id="roll-2-dice-btn" class="game-button" disabled>Roll 2 Dice</button> <button id="reroll-btn" class="game-button" style="display:none;" disabled>Reroll Dice</button> </div> </div>
+                    <div id="build-actions"> <button id="pass-turn-btn" class="game-button" disabled>Pass Build Phase</button> </div>
+                </div>
+                <div id="game-log-area"> <h2>Game Log</h2> <ul id="game-log"></ul> </div>
+            </aside>
+        </main>
+
+        <div id="game-over-message" style="display: none;">
+            <h2>Game Over!</h2>
+            <p id="winner-announcement"></p>
+            <a href="/games/dicetower/" class="game-button">Play Again?</a>
+            <a href="/" class="game-button secondary">Back to Emporium</a>
+        </div>
+
+        <!-- Help Modal (same as before) -->
+        <div id="help-modal" class="modal" style="display: none;">
+            <div class="modal-content"> <span class="close-button" id="close-help-modal">×</span> <h2>Dice Tower - Quick Rules</h2> <p><strong>Objective:</strong> Be the first player to build 3 major Landmarks (in addition to your starting Town Hall).</p> <h3>Turn Phases:</h3> <ol> <li><strong>Roll Dice</strong></li> <li><strong>Income Phase</strong></li> <li><strong>Build Phase</strong></li> </ol> <p><em>See card/landmark descriptions for specific effects!</em></p> <h3>Card Colors:</h3> <ul> <li style="color: #007bff;"><strong>BLUE:</strong> Earn on ANYONE'S turn.</li> <li style="color: #28a745;"><strong>GREEN:</strong> Earn on YOUR turn ONLY.</li> <li style="color: #dc3545;"><strong>RED:</strong> Opponents earn FROM YOU on YOUR turn.</li> <li style="color: #6f42c1;"><strong>PURPLE:</strong> Powerful effects on YOUR turn ONLY.</li> </ul> </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/games/dicetower/client.js"></script>
+</body>
+</html>

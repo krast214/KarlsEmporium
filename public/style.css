@@ -1,105 +1,110 @@
-/* ... (all previous styles from "Help Modal" version) ... */
-
-/* Header styling for Discord Status */
-#discord-status {
-    font-size: 0.8em;
-    color: #eee;
-    margin-top: 5px;
-}
-
-/* Start Game Section */
-#start-game-section {
-    background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin: 20px auto;
-    max-width: 500px;
-}
-#start-game-section p { margin-bottom: 10px; }
-#manual-start-game-btn { margin-top: 15px; }
-
-
-/* Player Area Adjustments for up to 4 players */
-#players-area-flex-container {
-    display: grid; /* Use grid for more control */
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
-    gap: 15px;
-}
-
-.player-info {
-    /* min-width removed, grid handles sizing */
-    /* flex-grow removed */
-    display: flex; /* For aligning avatar and info */
-    flex-direction: column; /* Stack content vertically */
-    /* background-color: var(--player-bg); already exists */
-    /* ... other existing player-info styles ... */
-}
-
-.player-header {
+/* public/style.css - For Emporium Landing Page */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    line-height: 1.6;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    flex-grow: 1;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 1.5rem 0;
+    text-align: center;
+    border-bottom: #007bff 5px solid;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+}
+
+#game-selection h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.game-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.game-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.game-icon {
+    width: 100px; /* Adjust as needed */
+    height: 100px;
+    margin: 0 auto 15px auto;
+    object-fit: contain; /* Or cover, depending on your icons */
+    border-radius: 4px; /* Optional for icon image */
+}
+
+.game-card h3 {
+    margin-top: 0;
     margin-bottom: 10px;
-}
-.player-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    border: 2px solid var(--border-color);
-}
-.player-name-coins h3 { margin: 0 0 3px 0; } /* Reduce margin for player name */
-.player-name-coins p { margin: 0; font-size: 0.9em; } /* Coins info */
-
-
-/* Ensure cards in market don't get too squished if market area is narrower */
-.card-display-area {
-    /* display: flex; flex-wrap: wrap; gap: 10px; (already exists) */
-    justify-content: flex-start; /* Align cards to the start */
+    color: #007bff;
+    font-size: 1.5em;
 }
 
-.card {
-    width: 150px; /* Slightly smaller for more cards */
-    /* ... other existing card styles ... */
+.game-card p {
+    font-size: 0.95em;
+    color: #555;
+    flex-grow: 1; /* Pushes button to bottom */
+    margin-bottom: 20px;
 }
 
-/* Responsive adjustments for up to 4 players */
-@media (max-width: 1200px) { /* Example breakpoint */
-    #players-area-flex-container {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-     .card { width: 140px; }
+.play-button {
+    display: inline-block;
+    background: #007bff;
+    color: #fff;
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-top: auto; /* Aligns button to bottom if content above is shorter */
 }
 
-@media (max-width: 992px) { /* Tablet */
-    #game-content-area {
-        flex-direction: column;
-    }
-    #market-section, #actions-and-log-section, #players-section {
-        flex-basis: 100%; /* Stack them */
-    }
-     #players-area-flex-container { /* 2 players per row on tablet */
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .card { width: calc(33% - 10px); } /* 3 cards per row in market */
+.play-button:hover {
+    background: #0056b3;
 }
 
-
-@media (max-width: 768px) { /* Smaller tablet / large phone */
-    #players-area-flex-container { /* Still 2 players per row, or 1 if too small */
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    .card { width: calc(50% - 10px); } /* 2 cards per row in market */
-}
-
-
-@media (max-width: 480px) { /* Phone */
-    #players-area-flex-container {
-        grid-template-columns: 1fr; /* 1 player per row */
-    }
-    .card { width: calc(100% - 10px); } /* 1 card per row */
-    .utility-button { /* Ensure it's visible and usable */
-        font-size: 0.8em;
-        padding: 6px 10px;
-    }
+footer {
+    text-align: center;
+    padding: 20px;
+    background: #333;
+    color: #fff;
+    margin-top: 30px; /* Pushes footer down */
 }

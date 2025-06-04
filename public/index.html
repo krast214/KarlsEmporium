@@ -3,180 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Tower - Discord Activity</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Discord Embedded App SDK -->
-    <script type="module" src="https://unpkg.com/@discord/embedded-app-sdk@1.2.0/output/discord-embedded-app-sdk.js"></script>
+    <title>Karl's Gaming Emporium</title>
+    <link rel="stylesheet" href="/style.css"> <!-- Main emporium styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background: linear-gradient(135deg, #23213a 0%, #6366f1 100%);
+        min-height: 100vh;
+        font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #23213a;
+        position: relative;
+      }
+      body::before {
+        display: none;
+      }
+      header {
+        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        color: #fff;
+        text-align: center;
+        padding: 2.2rem 0 1.2rem 0;
+        border-bottom-left-radius: 32px;
+        border-bottom-right-radius: 32px;
+        box-shadow: 0 4px 24px 0 #4f46e155;
+        position: relative;
+        font-family: 'Press Start 2P', 'UnifrakturCook', cursive;
+        letter-spacing: 1px;
+      }
+      header h1 {
+        font-size: 2.2em;
+        margin: 0;
+        font-family: 'Press Start 2P', 'UnifrakturCook', cursive;
+        letter-spacing: 2px;
+        text-shadow: 0 2px 12px #6366f1aa;
+        margin-bottom: 0.5em;
+      }
+      .fantasy-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 0.7em auto;
+        width: 60px; height: 60px;
+        filter: drop-shadow(0 2px 8px #6366f1aa);
+      }
+      .game-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        justify-content: center;
+        margin-top: 2.5rem;
+      }
+      .game-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 2px 16px 0 #6366f122;
+        padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+        min-width: 260px;
+        max-width: 340px;
+        text-align: center;
+        position: relative;
+        transition: transform 0.18s, box-shadow 0.18s;
+        border: 2px solid #e0e7ff;
+      }
+      .game-card:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 8px 32px 0 #6366f144;
+        border-color: #6366f1;
+      }
+      .game-icon, .fantasy-icon svg {
+        width: 60px; height: 60px;
+        margin-bottom: 0.7rem;
+      }
+      .play-button {
+        display: inline-block;
+        margin-top: 1.2rem;
+        padding: 0.7em 2em;
+        background: linear-gradient(90deg, #6366f1 0%, #a5b4fc 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-decoration: none;
+        box-shadow: 0 2px 8px #6366f1aa;
+        transition: background 0.18s, box-shadow 0.18s;
+      }
+      .play-button:hover {
+        background: linear-gradient(90deg, #a5b4fc 0%, #6366f1 100%);
+        box-shadow: 0 4px 16px #6366f1cc;
+      }
+      footer {
+        margin-top: 3rem;
+        text-align: center;
+        color: #6366f1;
+        font-size: 1em;
+        opacity: 0.85;
+      }
+      @media (max-width: 700px) {
+        .game-list { flex-direction: column; gap: 18px; }
+        .game-card { min-width: 90vw; max-width: 98vw; }
+        .game-icon, .fantasy-icon svg { width: 44px; height: 44px; }
+        header { border-radius: 0 0 18px 18px; }
+      }
+    </style>
 </head>
 <body>
-    <header>
-        <h1 id="game-title">Dice Tower</h1>
-        <div id="discord-status">Initializing Discord SDK...</div>
-        <div id="status-message">Connecting to game server...</div>
-        <button id="help-button" class="game-button utility-button" style="display:none;">Help / Rules</button>
-    </header>
+    <div class="container">
+        <header>
+            <h1>Karl's Gaming Emporium</h1>
+        </header>
 
-    <div id="initial-loading" style="text-align: center; padding: 20px;">
-        <p>Loading Dice Tower Activity...</p>
-        <p>If this takes too long, ensure you are running this inside Discord.</p>
-    </div>
-
-    <div id="start-game-section" style="display: none; text-align: center; padding: 20px;">
-        <p>Waiting for at least 2 players to join to start the game.</p>
-        <p>Current players: <span id="current-player-count">0</span> / 4</p>
-        <button id="manual-start-game-btn" class="game-button" disabled>Start Game Now (min 2)</button>
-    </div>
-
-
-    <main id="game-content-area" style="display: none;">
-        <section id="players-section">
-            <h2>Players</h2>
-            <div id="players-area-flex-container">
-                <!-- Player info (up to 4) -->
+        <section id="game-selection">
+            <h2 style="color:#fff;">Choose Your Adventure:</h2>
+            <div class="game-list">
+                <div class="game-card" id="game-dice-tower">
+                    <span class="fantasy-icon">
+                      <!-- Modern, clean dice tower SVG: simple, geometric, and neutral gray/black -->
+                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="20" y="18" width="20" height="28" rx="4" fill="#f4f4f7" stroke="#23213a" stroke-width="2.5"/>
+                        <rect x="25" y="10" width="10" height="10" rx="2" fill="#e0e7ef" stroke="#23213a" stroke-width="2"/>
+                        <rect x="28" y="6" width="4" height="6" rx="1.5" fill="#23213a"/>
+                        <rect x="26.5" y="28" width="3" height="8" rx="1" fill="#23213a"/>
+                        <rect x="30.5" y="28" width="3" height="8" rx="1" fill="#23213a"/>
+                        <circle cx="30" cy="44" r="2.5" fill="#23213a"/>
+                        <ellipse cx="30" cy="50" rx="8" ry="3" fill="#23213a" opacity="0.10"/>
+                      </svg>
+                    </span>
+                    <h3>Dice Tower</h3>
+                    <p>A fast-paced game of dice rolling, city building, and shrewd investments. Will you build the grandest city?</p>
+                    <a href="/games/dicetower/" class="play-button">Play</a>
+                </div>
+                <!-- Add more game cards here in the future -->
+                <!--
+                <div class="game-card" id="game-another-game">
+                    <img src="/images/another-game-icon.png" alt="Another Game Icon">
+                    <h3>Another Game</h3>
+                    <p>Description of the other game.</p>
+                    <a href="/games/anothergame/" class="play-button">Play Another Game</a>
+                </div>
+                -->
             </div>
         </section>
 
-        <section id="market-section">
-            <h2>Market</h2>
-            <div class="market-row-container">
-                <div id="market-row-1-6" class="market-row"><h3>Dice 1-6</h3><div class="card-display-area"></div></div>
-                <div id="market-row-7-12" class="market-row"><h3>Dice 7-12</h3><div class="card-display-area"></div></div>
-                <div id="market-row-all" class="market-row"><h3>Other (6, 11+)</h3><div class="card-display-area"></div></div>
-            </div>
-        </section>
-
-        <aside id="actions-and-log-section">
-            <div id="player-actions">
-                <h2 id="current-turn-indicator">Current Turn:</h2>
-                <div id="dice-roll-area">
-                    Dice Result: <span id="dice-result">N/A</span>
-                    <div class="action-buttons">
-                        <button id="roll-1-dice-btn" class="game-button" disabled>Roll 1 Die</button>
-                        <button id="roll-2-dice-btn" class="game-button" disabled>Roll 2 Dice</button>
-                        <button id="reroll-btn" class="game-button" style="display:none;" disabled>Reroll Dice</button>
-                    </div>
-                </div>
-                <div id="build-actions">
-                     <button id="pass-turn-btn" class="game-button" disabled>Pass Build Phase</button>
-                </div>
-            </div>
-            <div id="game-log-area">
-                <h2>Game Log</h2>
-                <ul id="game-log"></ul>
-            </div>
-        </aside>
-    </main>
-
-     <div id="game-over-message" style="display: none;">
-        <h2>Game Over!</h2>
-        <p id="winner-announcement"></p>
-        <!-- "Play Again" might not make sense in activity context without re-launch -->
-        <p>To play again, please re-launch the activity.</p>
+        <footer>
+            <p style="color:#fff;">© 2025 Karl's Gaming Emporium. All rights reserved (not really).</p>
+        </footer>
     </div>
-
-    <div id="help-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-button" id="close-help-modal">×</span>
-            <h2>Dice Tower - Quick Rules</h2>
-            <p><strong>Objective:</strong> Be the first player to build 3 major Landmarks (in addition to your starting Town Hall).</p>
-            <h3>Turn Phases:</h3>
-            <ol>
-                <li><strong>Roll Dice:</strong> Roll one die. If you've built the Train Station, you may choose to roll two.</li>
-                <li><strong>Income Phase:</strong> Based on card colors (Red, Blue, Green, Purple) and the dice roll.</li>
-                <li><strong>Build Phase:</strong> Buy one Establishment, build one Landmark, or Pass.</li>
-            </ol>
-            <p><em>See card/landmark descriptions for specific effects!</em></p>
-            <h3>Card Colors:</h3>
-            <ul>
-                <li><strong style="color: #007bff;">BLUE:</strong> Earn on ANYONE'S turn.</li>
-                <li><strong style="color: #28a745;">GREEN:</strong> Earn on YOUR turn ONLY.</li>
-                <li><strong style="color: #dc3545;">RED:</strong> Opponents earn FROM YOU on YOUR turn.</li>
-                <li><strong style="color: #6f42c1;">PURPLE:</strong> Powerful effects on YOUR turn ONLY.</li>
-            </ul>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script type_DISABLED="module" src="client.js"></script> <!-- Will be loaded dynamically -->
-    <script type="module">
-        // This script will handle Discord SDK initialization and then load client.js
-        import { DiscordSDK } from '@discord/embedded-app-sdk';
-
-        const discordStatusEl = document.getElementById('discord-status');
-        const initialLoadingEl = document.getElementById('initial-loading');
-        const startGameSectionEl = document.getElementById('start-game-section');
-        const gameContentAreaEl = document.getElementById('game-content-area');
-
-        // Replace with your actual Application's Client ID from Discord Developer Portal
-        // It's highly recommended to use an environment variable for this in a real deployment.
-        const CLIENT_ID = '1379716572590903356'; // <<< IMPORTANT: REPLACE THIS
-        
-        if (CLIENT_ID === '1379716572590903356') {
-            discordStatusEl.textContent = 'ERROR: Discord Client ID not set in index.html!';
-            discordStatusEl.style.color = 'red';
-            initialLoadingEl.innerHTML = '<p style="color:red;">Configuration Error: Discord Client ID is missing. Cannot start activity.</p>';
-        }
-
-        const discordSdk = new DiscordSDK(CLIENT_ID);
-        let authData = null; // To store authentication data from Discord
-
-        async function setupDiscordSdk() {
-            try {
-                await discordSdk.ready();
-                discordStatusEl.textContent = 'Discord SDK Ready. Authenticating...';
-
-                // Authorize with Discord Client
-                const { code } = await discordSdk.commands.authorize({
-                    client_id: CLIENT_ID,
-                    response_type: 'code',
-                    state: '',
-                    prompt: 'none', // 'none' for seamless auth; 'consent' if issues
-                    scope: ['identify', 'guilds.members.read', 'rpc.activities.write'], // Adjust scopes as needed
-                });
-
-                // Retrieve an access_token from your embedded app's server
-                const response = await fetch('/api/token', { // You NEED to implement this /api/token endpoint on your backend
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code }),
-                });
-                const { access_token } = await response.json();
-
-                // Authenticate with Discord client (using the access_token)
-                authData = await discordSdk.commands.authenticate({ access_token });
-
-                if (authData == null || authData.user == null) {
-                    throw new Error('Authentication failed or user data not received.');
-                }
-                discordStatusEl.textContent = `Authenticated as: ${authData.user.username}#${authData.user.discriminator}`;
-                
-                // Make user and instanceId available globally for client.js
-                window.discordAuth = authData;
-                window.discordInstanceId = discordSdk.instanceId; // The channel_id acts as gameId
-                window.discordChannelId = discordSdk.channelId; // More explicit
-
-
-                // Now that SDK is ready and user is authenticated, load the main game client script
-                const clientScript = document.createElement('script');
-                clientScript.type = 'module'; // Assuming client.js is an ES module
-                clientScript.src = 'client.js';
-                document.body.appendChild(clientScript);
-                
-                initialLoadingEl.style.display = 'none';
-                // startGameSectionEl or gameContentAreaEl will be shown by client.js based on game state
-
-            } catch (e) {
-                console.error('Discord SDK Error:', e);
-                discordStatusEl.textContent = 'Error with Discord SDK. Try running in Discord.';
-                discordStatusEl.style.color = 'red';
-                initialLoadingEl.innerHTML = `<p style="color:red;">Error initializing Discord Activity: ${e.message}. Ensure you're running this inside a Discord voice channel activity and your app is configured correctly.</p>`;
-            }
-        }
-        
-        // Only call setup if CLIENT_ID is set correctly
-        if (CLIENT_ID !== '1379716572590903356') {
-            setupDiscordSdk();
-        }
-    </script>
 </body>
 </html>
