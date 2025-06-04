@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Tower - Discord Activity</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Discord Embedded App SDK -->
+    <script type="module" src="https://unpkg.com/@discord/embedded-app-sdk@1.2.0/output/discord-embedded-app-sdk.js"></script>
+</head>
+<body>
+    <header>
+        <h1 id="game-title">Dice Tower</h1>
+        <div id="discord-status">Initializing Discord SDK...</div>
+        <div id="status-message">Connecting to game server...</div>
+        <button id="help-button" class="game-button utility-button" style="display:none;">Help / Rules</button>
+    </header>
+
+    <div id="initial-loading" style="text-align: center; padding: 20px;">
+        <p>Loading Dice Tower Activity...</p>
+        <p>If this takes too long, ensure you are running this inside Discord.</p>
+    </div>
+
+    <div id="start-game-section" style="display: none; text-align: center; padding: 20px;">
+        <p>Waiting for at least 2 players to join to start the game.</p>
+        <p>Current players: <span id="current-player-count">0</span> / 4</p>
+        <button id="manual-start-game-btn" class="game-button" disabled>Start Game Now (min 2)</button>
+    </div>
+
+
+    <main id="game-content-area" style="display: none;">
+        <section id="players-section">
+            <h2>Players</h2>
+            <div id="players-area-flex-container">
+                <!-- Player info (up to 4) -->
+            </div>
+        </section>
+
+        <section id="market-section">
+            <h2>Market</h2>
+            <div class="market-row-container">
+                <div id="market-row-1-6" class="market-row"><h3>Dice 1-6</h3><div class="card-display-area"></div></div>
+                <div id="market-row-7-12" class="market-row"><h3>Dice 7-12</h3><div class="card-display-area"></div></div>
+                <div id="market-row-all" class="market-row"><h3>Other (6, 11+)</h3><div class="card-display-area"></div></div>
+            </div>
+        </section>
+
+        <aside id="actions-and-log-section">
+            <div id="player-actions">
+                <h2 id="current-turn-indicator">Current Turn:</h2>
+                <div id="dice-roll-area">
+                    Dice Result: <span id="dice-result">N/A</span>
+                    <div class="action-buttons">
+                        <button id="roll-1-dice-btn" class="game-button" disabled>Roll 1 Die</button>
+                        <button id="roll-2-dice-btn" class="game-button" disabled>Roll 2 Dice</button>
+                        <button id="reroll-btn" class="game-button" style="display:none;" disabled>Reroll Dice</button>
+                    </div>
+                </div>
+                <div id="build-actions">
+                     <button id="pass-turn-btn" class="game-button" disabled>Pass Build Phase</button>
+                </div>
+            </div>
+            <div id="game-log-area">
+                <h2>Game Log</h2>
+                <ul id="game-log"></ul>
+            </div>
+        </aside>
+    </main>
+
+     <div id="game-over-message" style="display: none;">
+        <h2>Game Over!</h2>
+        <p id="winner-announcement"></p>
+        <!-- "Play Again" might not make sense in activity context without re-launch -->
+        <p>To play again, please re-launch the activity.</p>
+    </div>
+
+    <div id="help-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button" id="close-help-modal">×</span>
+            <h2>Dice Tower - Quick Rules</h2>
+            <p><strong>Objective:</strong> Be the first player to build 3 major Landmarks (in addition to your starting Town Hall).</p>
+            <h3>Turn Phases:</h3>
+            <ol>
+                <li><strong>Roll Dice:</strong> Roll one die. If you've built the Train Station, you may choose to roll two.</li>
+                <li><strong>Income Phase:</strong> Based on card colors (Red, Blue, Green, Purple) and the dice roll.</li>
+                <li><strong>Build Phase:</strong> Buy one Establishment, build one Landmark, or Pass.</li>
+            </ol>
+            <p><em>See card/landmark descriptions for specific effects!</em></p>
+            <h3>Card Colors:</h3>
+            <ul>
+                <li><strong style="color: #007bff;">BLUE:</strong> Earn on ANYONE'S turn.</li>
+                <li><strong style="color: #28a745;">GREEN:</strong> Earn on YOUR turn ONLY.</li>
+                <li><strong style="color: #dc3545;">RED:</strong> Opponents earn FROM YOU on YOUR turn.</li>
+                <li><strong style="color: #6f42c1;">PURPLE:</strong> Powerful effects on YOUR turn ONLY.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type_DISABLED="module" src="client.js"></script> <!-- Will be loaded dynamically -->
+    <script type="module">
+        // This script will handle Discord SDK initialization and then load client.js
+        import { DiscordSDK } from '@discord/embedded-app-sdk';
+
+        const discordStatusEl = document.getElementById('discord-status');
+        const initialLoadingEl = document.getElementById('initial-loading');
+        const startGameSectionEl = document.getElementById('start-game-section');
+        const gameContentAreaEl = document.getElementById('game-content-area');
+
+        // Replace with your actual Application's Client ID from Discord Developer Portal
+        // It's highly recommended to use an environment variable for this in a real deployment.
+        const CLIENT_ID = '1379716572590903356'; // <<< IMPORTANT: REPLACE THIS
+        
+        if (CLIENT_ID === '1379716572590903356') {
+            discordStatusEl.textContent = 'ERROR: Discord Client ID not set in index.html!';
+            discordStatusEl.style.color = 'red';
+            initialLoadingEl.innerHTML = '<p style="color:red;">Configuration Error: Discord Client ID is missing. Cannot start activity.</p>';
+        }
+
+        const discordSdk = new DiscordSDK(CLIENT_ID);
+        let authData = null; // To store authentication data from Discord
+
+        async function setupDiscordSdk() {
+            try {
+                await discordSdk.ready();
+                discordStatusEl.textContent = 'Discord SDK Ready. Authenticating...';
+
+                // Authorize with Discord Client
+                const { code } = await discordSdk.commands.authorize({
+                    client_id: CLIENT_ID,
+                    response_type: 'code',
+                    state: '',
+                    prompt: 'none', // 'none' for seamless auth; 'consent' if issues
+                    scope: ['identify', 'guilds.members.read', 'rpc.activities.write'], // Adjust scopes as needed
+                });
+
+                // Retrieve an access_token from your embedded app's server
+                const response = await fetch('/api/token', { // You NEED to implement this /api/token endpoint on your backend
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code }),
+                });
+                const { access_token } = await response.json();
+
+                // Authenticate with Discord client (using the access_token)
+                authData = await discordSdk.commands.authenticate({ access_token });
+
+                if (authData == null || authData.user == null) {
+                    throw new Error('Authentication failed or user data not received.');
+                }
+                discordStatusEl.textContent = `Authenticated as: ${authData.user.username}#${authData.user.discriminator}`;
+                
+                // Make user and instanceId available globally for client.js
+                window.discordAuth = authData;
+                window.discordInstanceId = discordSdk.instanceId; // The channel_id acts as gameId
+                window.discordChannelId = discordSdk.channelId; // More explicit
+
+
+                // Now that SDK is ready and user is authenticated, load the main game client script
+                const clientScript = document.createElement('script');
+                clientScript.type = 'module'; // Assuming client.js is an ES module
+                clientScript.src = 'client.js';
+                document.body.appendChild(clientScript);
+                
+                initialLoadingEl.style.display = 'none';
+                // startGameSectionEl or gameContentAreaEl will be shown by client.js based on game state
+
+            } catch (e) {
+                console.error('Discord SDK Error:', e);
+                discordStatusEl.textContent = 'Error with Discord SDK. Try running in Discord.';
+                discordStatusEl.style.color = 'red';
+                initialLoadingEl.innerHTML = `<p style="color:red;">Error initializing Discord Activity: ${e.message}. Ensure you're running this inside a Discord voice channel activity and your app is configured correctly.</p>`;
+            }
+        }
+        
+        // Only call setup if CLIENT_ID is set correctly
+        if (CLIENT_ID !== '1379716572590903356') {
+            setupDiscordSdk();
+        }
+    </script>
+</body>
+</html>

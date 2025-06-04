@@ -1,0 +1,105 @@
+/* ... (all previous styles from "Help Modal" version) ... */
+
+/* Header styling for Discord Status */
+#discord-status {
+    font-size: 0.8em;
+    color: #eee;
+    margin-top: 5px;
+}
+
+/* Start Game Section */
+#start-game-section {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    max-width: 500px;
+}
+#start-game-section p { margin-bottom: 10px; }
+#manual-start-game-btn { margin-top: 15px; }
+
+
+/* Player Area Adjustments for up to 4 players */
+#players-area-flex-container {
+    display: grid; /* Use grid for more control */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+    gap: 15px;
+}
+
+.player-info {
+    /* min-width removed, grid handles sizing */
+    /* flex-grow removed */
+    display: flex; /* For aligning avatar and info */
+    flex-direction: column; /* Stack content vertically */
+    /* background-color: var(--player-bg); already exists */
+    /* ... other existing player-info styles ... */
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid var(--border-color);
+}
+.player-name-coins h3 { margin: 0 0 3px 0; } /* Reduce margin for player name */
+.player-name-coins p { margin: 0; font-size: 0.9em; } /* Coins info */
+
+
+/* Ensure cards in market don't get too squished if market area is narrower */
+.card-display-area {
+    /* display: flex; flex-wrap: wrap; gap: 10px; (already exists) */
+    justify-content: flex-start; /* Align cards to the start */
+}
+
+.card {
+    width: 150px; /* Slightly smaller for more cards */
+    /* ... other existing card styles ... */
+}
+
+/* Responsive adjustments for up to 4 players */
+@media (max-width: 1200px) { /* Example breakpoint */
+    #players-area-flex-container {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+     .card { width: 140px; }
+}
+
+@media (max-width: 992px) { /* Tablet */
+    #game-content-area {
+        flex-direction: column;
+    }
+    #market-section, #actions-and-log-section, #players-section {
+        flex-basis: 100%; /* Stack them */
+    }
+     #players-area-flex-container { /* 2 players per row on tablet */
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .card { width: calc(33% - 10px); } /* 3 cards per row in market */
+}
+
+
+@media (max-width: 768px) { /* Smaller tablet / large phone */
+    #players-area-flex-container { /* Still 2 players per row, or 1 if too small */
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .card { width: calc(50% - 10px); } /* 2 cards per row in market */
+}
+
+
+@media (max-width: 480px) { /* Phone */
+    #players-area-flex-container {
+        grid-template-columns: 1fr; /* 1 player per row */
+    }
+    .card { width: calc(100% - 10px); } /* 1 card per row */
+    .utility-button { /* Ensure it's visible and usable */
+        font-size: 0.8em;
+        padding: 6px 10px;
+    }
+}
