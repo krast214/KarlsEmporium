@@ -271,23 +271,51 @@ function showDiceRoll(diceArray) {
   const diceDisplay = document.getElementById('dice-display');
   const diceResult = document.getElementById('dice-result');
   if (!diceDisplay) return;
-  const diceEmojis = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+  const diceEmojis = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
   if (diceArray.length === 1) {
     const val = diceArray[0];
-    diceDisplay.textContent = diceEmojis[val] || val;
-    if (diceResult) diceResult.textContent = '';
+    // Animate the die: show random faces, then settle on the result
+    let rollFrames = 10;
+    let frame = 0;
+    const animateRoll = () => {
+      if (frame < rollFrames) {
+        const randomVal = Math.floor(Math.random() * 6) + 1;
+        diceDisplay.textContent = diceEmojis[randomVal] || randomVal;
+        frame++;
+        setTimeout(animateRoll, 40);
+      } else {
+        diceDisplay.textContent = diceEmojis[val] || val;
+        if (diceResult) diceResult.textContent = `Rolled: ${val}`;
+      }
+    };
+    diceDisplay.classList.remove('shake');
+    void diceDisplay.offsetWidth;
+    diceDisplay.classList.add('shake');
+    animateRoll();
   } else if (diceArray.length === 2) {
-    diceDisplay.textContent = diceArray.map(val => diceEmojis[val] || val).join(' ');
-    if (diceResult) diceResult.textContent = `Sum: ${diceArray[0] + diceArray[1]}`;
+    // Animate both dice, then show result
+    let rollFrames = 10;
+    let frame = 0;
+    const animateRoll = () => {
+      if (frame < rollFrames) {
+        const r1 = Math.floor(Math.random() * 6) + 1;
+        const r2 = Math.floor(Math.random() * 6) + 1;
+        diceDisplay.textContent = `${diceEmojis[r1] || r1} ${diceEmojis[r2] || r2}`;
+        frame++;
+        setTimeout(animateRoll, 40);
+      } else {
+        diceDisplay.textContent = diceArray.map(val => diceEmojis[val] || val).join(' ');
+        if (diceResult) diceResult.textContent = `Sum: ${diceArray[0] + diceArray[1]}`;
+      }
+    };
+    diceDisplay.classList.remove('shake');
+    void diceDisplay.offsetWidth;
+    diceDisplay.classList.add('shake');
+    animateRoll();
   } else {
     diceDisplay.textContent = '🎲';
     if (diceResult) diceResult.textContent = '';
   }
-  // Trigger shake animation
-  diceDisplay.classList.remove('shake');
-  void diceDisplay.offsetWidth;
-  diceDisplay.classList.add('shake');
-  setTimeout(() => diceDisplay.classList.remove('shake'), 600);
 }
 
 // Patch into your game state update/render logic:

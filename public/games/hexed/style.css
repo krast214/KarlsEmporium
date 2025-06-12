@@ -1,0 +1,180 @@
+/* Hexed! base styles - inspired by Dice Tower */
+:root {
+  --primary-color: #7c3aed;
+  --secondary-color: #f59e42;
+  --success-color: #22c55e;
+  --danger-color: #ef4444;
+  --light-bg: #f3f4f6;
+  --dark-text: #23213a;
+  --border-color: #e5e7eb;
+  --card-bg: #fff;
+  --player-bg: #f3f4f6;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #ede9fe 0%, #f3f4f6 100%);
+  color: var(--dark-text);
+  min-height: 100vh;
+}
+.game-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 20px 20px;
+}
+.game-header {
+  background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
+  color: #fff;
+  padding: 1rem 20px;
+  text-align: center;
+  box-shadow: 0 4px 16px 0 #7c3aed40;
+  margin-bottom: 20px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+}
+.game-header h1 { margin: 0; font-size: 2em; }
+#room-info { font-size: 0.9em; margin-top: 5px; }
+#hexed-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 18px;
+  width: 54px; height: 54px;
+  background: none;
+  filter: drop-shadow(0 2px 8px #a78bfa88);
+}
+#lobby-section {
+  background-color: var(--card-bg);
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 30px;
+  text-align: center;
+}
+#create-join-forms {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+#host-actions, #join-actions {
+  background-color: var(--player-bg);
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  min-width: 260px;
+  flex: 1;
+}
+#host-actions h2, #join-actions h2 {
+  margin-top: 0;
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+#create-join-forms label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-align: left;
+}
+#create-join-forms input[type="text"],
+#create-join-forms select {
+  width: calc(100% - 22px);
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+}
+#room-code-input { text-transform: uppercase; }
+.or-divider {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  color: var(--secondary-color);
+  padding: 20px 0;
+}
+#lobby-waiting-area {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px dashed var(--primary-color);
+  border-radius: 6px;
+}
+#lobby-player-list {
+  margin-top: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.lobby-player {
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: white;
+  background: var(--primary-color);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+}
+.error-text { color: var(--danger-color); font-weight: bold; margin-top: 10px; }
+.game-button {
+  padding: 10px 18px;
+  font-size: 1em;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-button:hover:not(:disabled) { background-color: #5b21b6; }
+.game-button:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.7; }
+.game-button.secondary { background-color: var(--secondary-color); }
+.game-button.secondary:hover:not(:disabled) { background-color: #f59e42cc; }
+.utility-button {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background-color: var(--secondary-color);
+  font-size: 0.85em;
+  padding: 8px 12px;
+  text-transform: none;
+}
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(60, 60, 80, 0.18);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 32px 24px 24px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 32px #7c3aed22;
+  min-width: 320px;
+  max-width: 95vw;
+  position: relative;
+}
+.close-button {
+  position: absolute;
+  top: 12px; right: 16px;
+  font-size: 1.5em;
+  color: #7c3aed;
+  cursor: pointer;
+}
+#game-content-area {
+  margin-top: 24px;
+}
+#game-over-message {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #7c3aed22;
+  padding: 32px 24px;
+  text-align: center;
+  margin-top: 40px;
+}
