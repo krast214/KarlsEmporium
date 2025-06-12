@@ -113,9 +113,7 @@ function renderPlayers(players, currentPlayerGameId, landmarkDefs, myPlayerInGam
         playerDiv.classList.add('player-info');
         if (player.id === currentPlayerGameId) playerDiv.classList.add('current-turn');
         if (player.id === MY_SOCKET_ID) playerDiv.classList.add('is-self');
-        // Apply color to player info card border or background
         playerDiv.style.borderLeft = `5px solid ${player.color || '#ccc'}`;
-
 
         let establishmentsHtml = '<h4>Establishments</h4><ul>';
         if (player.establishments.length === 0) establishmentsHtml += '<li>None yet</li>';
@@ -125,27 +123,30 @@ function renderPlayers(players, currentPlayerGameId, landmarkDefs, myPlayerInGam
         });
         establishmentsHtml += '</ul>';
 
-        let landmarksHtml = '<h4>Landmarks</h4><ul id="landmarks-player-' + player.id + '">';
+        // --- Landmark Card Rendering ---
+        let landmarksHtml = '<h4>Landmarks</h4><div class="landmarks-card-row">';
         player.landmarks.forEach(lm => {
-            const detail = landmarkDefs[lm.id] || { name: lm.id, description: "Unknown effect." };
+            const detail = landmarkDefs[lm.id] || { name: lm.id, description: "Unknown effect.", icon: '🏛️' };
             const costText = lm.built ? '' : `Cost: ${detail.cost}`;
-            const statusText = lm.built ? ' (Built)' : ' (Not Built)';
+            const statusText = lm.built ? 'Built' : 'Not Built';
+            const showBuildBtn = !lm.built && player.id === MY_SOCKET_ID && CURRENT_GAME_STATE.currentPlayerId === MY_SOCKET_ID && CURRENT_GAME_STATE.turnPhase === 'build' && myPlayerInGame?.coins >= detail.cost && lm.id !== 'town_hall';
             landmarksHtml += `
-                <li class="landmark-item ${lm.built ? 'built' : ''}">
-                    <span class="landmark-name">${detail.name}</span>
-                    <span class="landmark-cost">${costText}</span>
-                    <span class="landmark-status">${statusText}</span>
-                    <span class="landmark-description">${detail.description}</span>
-                    ${!lm.built && player.id === MY_SOCKET_ID && CURRENT_GAME_STATE.currentPlayerId === MY_SOCKET_ID && CURRENT_GAME_STATE.turnPhase === 'build' && myPlayerInGame?.coins >= detail.cost
-                        ? `<button class="game-button build-landmark-btn" data-landmark-id="${lm.id}">Build</button>` : ''}
-                </li>`;
+                <div class="landmark-card${lm.built ? ' built' : ''}">
+                    <div class="landmark-card-header">
+                        <span class="landmark-icon">${detail.icon || '🏛️'}</span>
+                        <span class="landmark-name">${detail.name}</span>
+                    </div>
+                    <div class="landmark-cost-status">
+                        <span class="landmark-cost">${costText}</span>
+                        <span class="landmark-status">${statusText}</span>
+                    </div>
+                    <div class="landmark-description">${detail.description}</div>
+                    ${showBuildBtn ? `<button class="game-button build-landmark-btn" data-landmark-id="${lm.id}">Build</button>` : ''}
+                </div>`;
         });
-        landmarksHtml += '</ul>';
+        landmarksHtml += '</div>';
 
-        // For avatar, if not passed from server, use color block
         const avatarColorBlock = `<div class="player-avatar" style="background-color: ${player.color || '#ccc'};"></div>`;
-
-        // Animate coin change for current player
         let coinsHtml = `<p><strong>Coins: <span class="coin-count">${player.coins}</span></strong></p>`;
         playerDiv.innerHTML = `
             <div class="player-header">
@@ -226,7 +227,11 @@ function updateTurnIndicatorAndDice(gameState) {
     if (!currentPlayer) { currentTurnIndicator.innerHTML = "Error: Player not found."; return; }
     currentTurnIndicator.innerHTML = `Turn: <strong style="color:${currentPlayer.color || '#333'}">${currentPlayer.name} ${currentPlayer.id === MY_SOCKET_ID ? '(You)' : ''}</strong> <br> Phase: <strong>${gameState.turnPhase.replace('_', ' ').toUpperCase()}</strong>`;
     if (gameState.diceRoll) {
-        diceResultDisplay.textContent = `${gameState.diceRoll.join(' + ')} = ${gameState.diceSum}`;
+        if (gameState.diceRoll.length === 1) {
+            diceResultDisplay.textContent = '';
+        } else if (gameState.diceRoll.length === 2) {
+            diceResultDisplay.textContent = `Sum: ${gameState.diceRoll[0] + gameState.diceRoll[1]}`;
+        }
         diceResultDisplay.classList.remove('animate');
         void diceResultDisplay.offsetWidth; // Force reflow for animation
         diceResultDisplay.classList.add('animate');
