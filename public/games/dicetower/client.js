@@ -274,13 +274,13 @@ function showDiceRoll(diceArray) {
   const diceEmojis = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
   if (diceArray.length === 1) {
     const val = diceArray[0];
-    // Animate the die: show random faces, then settle on the result
     let rollFrames = 10;
     let frame = 0;
     const animateRoll = () => {
       if (frame < rollFrames) {
         const randomVal = Math.floor(Math.random() * 6) + 1;
         diceDisplay.textContent = diceEmojis[randomVal] || randomVal;
+        if (diceResult) diceResult.textContent = '';
         frame++;
         setTimeout(animateRoll, 40);
       } else {
@@ -293,7 +293,6 @@ function showDiceRoll(diceArray) {
     diceDisplay.classList.add('shake');
     animateRoll();
   } else if (diceArray.length === 2) {
-    // Animate both dice, then show result
     let rollFrames = 10;
     let frame = 0;
     const animateRoll = () => {
@@ -301,6 +300,7 @@ function showDiceRoll(diceArray) {
         const r1 = Math.floor(Math.random() * 6) + 1;
         const r2 = Math.floor(Math.random() * 6) + 1;
         diceDisplay.textContent = `${diceEmojis[r1] || r1} ${diceEmojis[r2] || r2}`;
+        if (diceResult) diceResult.textContent = '';
         frame++;
         setTimeout(animateRoll, 40);
       } else {
