@@ -68,11 +68,25 @@
             </section>
             <aside id="actions-and-log-section">
                 <div id="player-actions">
-                    <h2 id="current-turn-indicator">Current Turn:</h2>
-                    <div id="dice-roll-area"> Dice Result: <span id="dice-result">N/A</span> <div class="action-buttons"> <button id="roll-1-dice-btn" class="game-button" disabled>Roll 1 Die</button> <button id="roll-2-dice-btn" class="game-button" disabled>Roll 2 Dice</button> <button id="reroll-btn" class="game-button" style="display:none;" disabled>Reroll Dice</button> </div> </div>
-                    <div id="build-actions"> <button id="pass-turn-btn" class="game-button" disabled>Pass Build Phase</button> </div>
+                    <h2>Player Actions</h2>
+                    <div id="current-turn-indicator"></div>
+                    <div id="dice-roll-area">
+                        <div id="dice-display">🎲</div>
+                        <div id="dice-result"></div>
+                        <div class="action-buttons">
+                            <button id="roll-1-dice-btn" class="game-button" disabled>Roll 1 Die</button>
+                            <button id="roll-2-dice-btn" class="game-button" disabled>Roll 2 Dice</button>
+                            <button id="reroll-btn" class="game-button" style="display:none;" disabled>Reroll Dice</button>
+                        </div>
+                    </div>
+                    <div id="build-actions">
+                        <button id="pass-turn-btn" class="game-button" disabled>Pass Build Phase</button>
+                    </div>
                 </div>
-                <div id="game-log-area"> <h2>Game Log</h2> <ul id="game-log"></ul> </div>
+                <div id="game-log-area">
+                    <h2>Game Log</h2>
+                    <ul id="game-log"></ul>
+                </div>
             </aside>
         </main>
 

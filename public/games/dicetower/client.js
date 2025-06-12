@@ -262,6 +262,38 @@ function renderGameLog(logs) {
     gameLogUl.scrollTop = 0;
 }
 
+function showDiceRoll(diceArray) {
+  const diceDisplay = document.getElementById('dice-display');
+  if (!diceDisplay) return;
+  // Use emoji for 1-6, fallback to number
+  const diceEmojis = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+  if (diceArray.length === 1) {
+    const val = diceArray[0];
+    diceDisplay.textContent = diceEmojis[val] || val;
+  } else if (diceArray.length === 2) {
+    diceDisplay.textContent = diceArray.map(val => diceEmojis[val] || val).join(' ');
+  } else {
+    diceDisplay.textContent = '🎲';
+  }
+  // Trigger shake animation
+  diceDisplay.classList.remove('shake');
+  void diceDisplay.offsetWidth; // force reflow
+  diceDisplay.classList.add('shake');
+  setTimeout(() => diceDisplay.classList.remove('shake'), 600);
+}
+
+// Patch into your game state update/render logic:
+function updateGameUI(gameState) {
+  // ...existing code...
+  if (gameState.diceRoll && gameState.diceRoll.length > 0) {
+    showDiceRoll(gameState.diceRoll);
+  } else {
+    const diceDisplay = document.getElementById('dice-display');
+    if (diceDisplay) diceDisplay.textContent = '🎲';
+  }
+  // ...existing code...
+}
+
 
 // --- Socket Event Handlers ---
 socket.on('connect', () => {
