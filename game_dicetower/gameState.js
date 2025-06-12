@@ -1,15 +1,26 @@
 // karls-gaming-emporium/game_dicetower/gameState.js
 const { ESTABLISHMENTS, LANDMARKS, getInitialLandmarks } = require('./cards');
 
+function getRandomLandmarks(num) {
+    const allLandmarkIds = Object.keys(LANDMARKS);
+    const shuffled = [...allLandmarkIds];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, num);
+}
+
 class Player {
-    constructor(id, name, color = '#cccccc', avatarUrl = null) { // Added color, avatarUrl
+    constructor(id, name, color = '#cccccc', avatarUrl = null, landmarkIds = []) {
         this.id = id; // This will be the socket.id from the lobby
         this.name = name;
         this.color = color; // Store player color
         this.avatarUrl = avatarUrl; // Optional avatar
         this.coins = 3;
         this.establishments = []; // [{id: 'wheat_field', count: 1}, ...]
-        this.landmarks = getInitialLandmarks();
+        // Only assign the 3 random landmarks for this player
+        this.landmarks = landmarkIds.map(lid => ({ id: lid, built: false }));
 
         // Abilities from landmarks
         this.canRollTwoDice = false;
@@ -79,6 +90,7 @@ class DiceTowerGameState {
         this.decks = { '1-6': [], '7-12': [], 'all': [] };
         this.market = { '1-6': [], '7-12': [], 'all': [] };
 
+        this._landmarkAssignments = {};
         this._initializeSupplyDecksAndMarket();
     }
 
@@ -136,7 +148,23 @@ class DiceTowerGameState {
              return { success: true, message: "Player already in game instance.", player: this.players.find(p => p.id === playerData.id) };
         }
 
-        const newPlayer = new Player(playerData.id, playerData.name, playerData.color, playerData.avatarUrl);
+        // Assign 3 unique random landmarks to this player if not already assigned
+        if (!this._landmarkAssignments[playerData.id]) {
+            // Ensure no overlap with other players
+            const assigned = new Set(Object.values(this._landmarkAssignments).flat());
+            const available = Object.keys(LANDMARKS).filter(lid => !assigned.has(lid));
+            let landmarkIds;
+            if (available.length >= 3) {
+                // Enough left for unique sets
+                landmarkIds = getRandomLandmarks(3).filter(lid => !assigned.has(lid)).slice(0, 3);
+            } else {
+                // Not enough left, allow overlap (shouldn't happen in 4p base game)
+                landmarkIds = getRandomLandmarks(3);
+            }
+            this._landmarkAssignments[playerData.id] = landmarkIds;
+        }
+        const landmarkIds = this._landmarkAssignments[playerData.id];
+        const newPlayer = new Player(playerData.id, playerData.name, playerData.color, playerData.avatarUrl, landmarkIds);
         this.players.push(newPlayer);
         this.gameLog.push(`${newPlayer.name} (color: ${newPlayer.color}) added to Dice Tower game.`);
         return { success: true, player: newPlayer };

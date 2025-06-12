@@ -264,20 +264,23 @@ function renderGameLog(logs) {
 
 function showDiceRoll(diceArray) {
   const diceDisplay = document.getElementById('dice-display');
+  const diceResult = document.getElementById('dice-result');
   if (!diceDisplay) return;
-  // Use emoji for 1-6, fallback to number
   const diceEmojis = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
   if (diceArray.length === 1) {
     const val = diceArray[0];
     diceDisplay.textContent = diceEmojis[val] || val;
+    if (diceResult) diceResult.textContent = '';
   } else if (diceArray.length === 2) {
     diceDisplay.textContent = diceArray.map(val => diceEmojis[val] || val).join(' ');
+    if (diceResult) diceResult.textContent = `Sum: ${diceArray[0] + diceArray[1]}`;
   } else {
     diceDisplay.textContent = '🎲';
+    if (diceResult) diceResult.textContent = '';
   }
   // Trigger shake animation
   diceDisplay.classList.remove('shake');
-  void diceDisplay.offsetWidth; // force reflow
+  void diceDisplay.offsetWidth;
   diceDisplay.classList.add('shake');
   setTimeout(() => diceDisplay.classList.remove('shake'), 600);
 }
@@ -289,11 +292,36 @@ function updateGameUI(gameState) {
     showDiceRoll(gameState.diceRoll);
   } else {
     const diceDisplay = document.getElementById('dice-display');
+    const diceResult = document.getElementById('dice-result');
     if (diceDisplay) diceDisplay.textContent = '🎲';
+    if (diceResult) diceResult.textContent = '';
   }
   // ...existing code...
 }
 
+function renderLandmarks(player, isSelf) {
+  const container = document.createElement('ul');
+  container.className = 'landmarks-list';
+  player.landmarks.forEach(landmark => {
+    const data = LANDMARKS[landmark.id];
+    const li = document.createElement('li');
+    li.className = 'landmark-item' + (landmark.built ? ' built' : '');
+    li.innerHTML = `
+      <span class="landmark-name">${data.name}</span>
+      <span class="landmark-cost">Cost: ${data.cost}</span>
+      <span class="landmark-status">${landmark.built ? 'Built' : 'Not built'}</span>
+      <span class="landmark-description">${data.description || ''}</span>
+    `;
+    if (isSelf && !landmark.built && player.coins >= data.cost) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Build';
+      btn.onclick = () => buildLandmark(landmark.id);
+      li.appendChild(btn);
+    }
+    container.appendChild(li);
+  });
+  return container;
+}
 
 // --- Socket Event Handlers ---
 socket.on('connect', () => {
