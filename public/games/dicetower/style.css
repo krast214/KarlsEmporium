@@ -197,7 +197,6 @@ body::before {
   overflow-y: auto;
   z-index: 2;
 }
-#game-content-area { display: flex; flex-wrap: wrap; gap: 20px; padding-top: 20px;}
 #players-section { flex: 1 1 100%; background-color: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
 #players-section h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 #players-area-flex-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;}
