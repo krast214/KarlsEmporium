@@ -179,12 +179,30 @@ body::before {
 }
 
 /* Styles for Game Board (mostly from previous version) */
+#game-content-area {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1fr;
+  gap: 24px;
+  padding-top: 20px;
+  align-items: flex-start;
+}
+#players-section, #market-section, #actions-and-log-section {
+  min-width: 0;
+}
+#actions-and-log-section {
+  position: sticky;
+  top: 30px;
+  align-self: flex-start;
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 2;
+}
 #game-content-area { display: flex; flex-wrap: wrap; gap: 20px; padding-top: 20px;}
 #players-section { flex: 1 1 100%; background-color: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
 #players-section h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 #players-area-flex-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;}
 .player-info { background-color: var(--player-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 6px; display: flex; flex-direction: column; }
-.player-info.current-turn { border-color: var(--success-color); box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); }
+.player-info.current-turn { border-color: #ffd700; box-shadow: 0 0 24px 4px #ffd70055, 0 0 0 2.5px #ffd700; animation: turn-glow 1.2s infinite alternate; }
 .player-info.is-self { border-left: 5px solid var(--warning-color); }
 .player-header { display: flex; align-items: center; margin-bottom: 10px; }
 .player-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; border: 2px solid var(--border-color); background-color: #ccc; /* Placeholder */ }
@@ -198,8 +216,22 @@ body::before {
 .market-row-container { display: flex; flex-direction: column; gap: 15px; }
 .market-row h3 { font-size: 1em; color: var(--secondary-color); margin-bottom: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; }
 .card-display-area { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start; }
-.card { border: 1px solid var(--primary-color); background-color: var(--card-bg); padding: 10px; border-radius: 6px; cursor: pointer; width: 150px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
-.card:hover:not(.disabled) { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+.card {
+  border: 1px solid var(--primary-color);
+  background-color: var(--card-bg);
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 150px;
+  box-shadow: 0 2px 12px 0 rgba(80,80,120,0.08), 0 1.5px 0 0 #e0e7ff;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.card:hover:not(.disabled) {
+  transform: scale(1.04) translateY(-4px);
+  box-shadow: 0 6px 18px rgba(80,80,120,0.18);
+}
 .card.disabled { background-color: #e9ecef; border-color: #adb5bd; color: #6c757d; cursor: not-allowed; opacity: 0.7; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
 .card-name { font-weight: bold; font-size: 1.05em; flex-grow: 1; }
@@ -211,7 +243,7 @@ body::before {
 .card-cost, .card-activation { font-size: 0.9em; margin-bottom: 3px; }
 .card-cost { font-weight: bold; }
 .card-desc { font-size: 0.8em; color: var(--secondary-color); margin-top: auto; flex-grow: 1; }
-.card-supply { font-size: 0.75em; color: #888; text-align: right; margin-top: 5px; }
+.card-supply { font-size: 0.8em; color: #6366f1; font-weight: bold; }
 
 #actions-and-log-section { flex: 1 1 300px; display: flex; flex-direction: column; gap: 20px; }
 #player-actions, #game-log-area { background-color: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -263,11 +295,11 @@ body::before {
 .card.flash {
   animation: card-flash 0.6s;
   background-color: #fffbe6 !important;
-  border-color: var(--warning-color) !important;
+  border-color: #ffd700 !important;
 }
 @keyframes card-flash {
-  0% { background-color: #fffbe6; border-color: var(--warning-color); }
-  80% { background-color: #fffbe6; border-color: var(--warning-color); }
+  0% { background-color: #fffbe6; border-color: #ffd700; }
+  80% { background-color: #fffbe6; border-color: #ffd700; }
   100% { background-color: var(--card-bg); border-color: var(--primary-color); }
 }
 
@@ -279,7 +311,7 @@ body::before {
 
 /* Animate coin change (pulse) */
 @keyframes coin-pulse {
-  0% { color: var(--success-color); transform: scale(1.2); }
+  0% { color: #28a745; transform: scale(1.2); }
   100% { color: inherit; transform: scale(1); }
 }
 .player-name-coins .coin-animate {
@@ -295,6 +327,15 @@ body::before {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Section Headers */
+#players-section h2, #market-section h2, #player-actions h2, #game-log-area h2 {
+  border-left: 6px solid #4f46e5;
+  padding-left: 12px;
+  background: linear-gradient(90deg, #e0e7ff 0%, #f8fafc 100%);
+  border-bottom: none;
+  margin-bottom: 16px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) { #game-content-area { flex-direction: column; } #market-section, #actions-and-log-section, #players-section { flex-basis: 100%; } #players-area-flex-container { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } .card { width: calc(33% - 10px); } }
 @media (max-width: 768px) { #players-area-flex-container { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } .card { width: calc(50% - 10px); } }
@@ -302,5 +343,7 @@ body::before {
     body::before { background-size: 350px; top: 40px; }
     .game-header { border-radius: 0 0 16px 16px; }
     #dicetower-icon { width: 38px; height: 38px; margin-right: 10px; }
+    #game-content-area { display: flex; flex-direction: column; }
+    #actions-and-log-section { position: static; max-height: none; overflow: visible; }
 }
 @media (max-width: 480px) { #players-area-flex-container { grid-template-columns: 1fr; } .card { width: calc(100% - 10px); } .utility-button { font-size: 0.8em; padding: 6px 10px; } }
