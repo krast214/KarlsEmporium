@@ -2,7 +2,7 @@
 // NOTE: This script is now loaded AFTER Discord SDK initializes in index.html
 // It expects window.discordAuth and window.discordInstanceId / window.discordChannelId to be set.
 
-const socket = io( 'http://localhost:3000' || `${window.location.protocol}//${window.location.host}`); // Connect to your backend server URL
+const socket = io(); // Connect to the server hosting this page
 
 // --- DOM Elements ---
 const discordStatusEl = document.getElementById('discord-status');
