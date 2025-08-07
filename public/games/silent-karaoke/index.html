@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Karaoke - Game Room</title>
+    <link rel="stylesheet" href="/games/silent-karaoke/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <span id="silent-karaoke-icon"></span>
+            <h1>Silent Karaoke</h1>
+            <div id="room-info">Room Code: <span id="room-code-display">N/A</span></div>
+            <button id="help-button" class="game-button utility-button" style="display:none;">Help / Rules</button>
+        </header>
+        <section id="lobby-section">
+            <div id="create-join-forms">
+                <div id="host-actions">
+                    <h2>Host Game</h2>
+                    <label for="player-name-host">Your Name:</label>
+                    <input type="text" id="player-name-host" placeholder="Enter your name">
+                    <label for="player-count-select">Max Players (2-8):</label>
+                    <select id="player-count-select">
+                        <option value="2">2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4">4 Players</option>
+                        <option value="5">5 Players</option>
+                        <option value="6">6 Players</option>
+                        <option value="7">7 Players</option>
+                        <option value="8">8 Players</option>
+                    </select>
+                    <button id="create-room-btn" class="game-button">Create Room</button>
+                </div>
+                <div class="or-divider">OR</div>
+                <div id="join-actions">
+                    <h2>Join Game</h2>
+                    <label for="player-name-join">Your Name:</label>
+                    <input type="text" id="player-name-join" placeholder="Enter your name">
+                    <label for="room-code-input">Room Code:</label>
+                    <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="5">
+                    <button id="join-room-btn" class="game-button">Join Room</button>
+                </div>
+            </div>
+            <div id="lobby-waiting-area" style="display: none;">
+                <h2>Lobby: <span id="lobby-room-code"></span></h2>
+                <p id="waiting-message">Waiting for players...</p>
+                <div id="lobby-player-list"></div>
+                <button id="start-game-btn" class="game-button" style="display: none;" disabled>Start Game</button>
+            </div>
+            <div id="lobby-error-message" class="error-text" style="display: none;"></div>
+        </section>
+        <main id="game-content-area" style="display: none;">
+            <section id="karaoke-section">
+                <h2>Silent Karaoke Game Area</h2>
+                <div id="karaoke-game-area"></div>
+            </section>
+        </main>
+        <div id="game-over-message" style="display: none;">
+            <h2>Game Over!</h2>
+            <p id="winner-announcement"></p>
+            <a href="/games/silent-karaoke/" class="game-button">Play Again?</a>
+            <a href="/" class="game-button secondary">Back to Emporium</a>
+        </div>
+        <div id="help-modal" class="modal" style="display: none;">
+            <div class="modal-content"> <span class="close-button" id="close-help-modal">×</span> <h2>Silent Karaoke - Quick Rules</h2> <p><strong>Objective:</strong> Guess the song or phrase your friends are "singing"—without a sound! Each round, one player gets a secret prompt and must act it out using only gestures and lip-syncing. The rest try to guess as quickly as possible. No humming, no mouthing words, just pure silent performance!</p> <h3>How to Play:</h3> <ol> <li><strong>Join a room</strong> and wait for everyone to arrive.</li> <li><strong>Host starts the game.</strong></li> <li>Each round, a player is chosen as the "Performer" and receives a secret prompt.</li> <li>The Performer acts out the prompt silently. Others type guesses in chat.</li> <li>First correct guess wins the round!</li> <li>Rotate and repeat. Most points at the end wins.</li> </ol> <p><em>Tip: Be expressive! The more dramatic, the better.</em></p> </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/games/silent-karaoke/client.js"></script>
+</body>
+</html>
