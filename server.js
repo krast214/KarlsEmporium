@@ -245,7 +245,7 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = 80;
 server.listen(PORT, () => {
     console.log(`Karl's Gaming Emporium server listening on *:${PORT}`);
 });
