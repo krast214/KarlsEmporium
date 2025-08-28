@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Charades Lobby</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .charades-lobby {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .charades-lobby h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 16px;
+        }
+        .charades-lobby label {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .charades-lobby select, .charades-lobby input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 2px solid #A020F0;
+            font-size: 1em;
+        }
+        .charades-lobby button {
+            background: #A020F0;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .charades-lobby button:hover {
+            background: #6c1ca0;
+        }
+        .room-code {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #A020F0;
+            text-align: center;
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="charades-lobby">
+        <h1>Emoji Charades Lobby</h1>
+        <label for="category">Category</label>
+        <select id="category">
+            <option value="movies">Movies</option>
+            <option value="phrases">Phrases</option>
+            <option value="famous">Famous People</option>
+        </select>
+        <label for="rounds">Number of Rounds</label>
+        <input type="number" id="rounds" min="1" max="10" value="3">
+        <button onclick="createRoom()">Create Room</button>
+        <div id="roomSection" style="display:none;">
+            <div class="room-code">Room Code: <span id="roomCode"></span></div>
+            <label for="playerName">Enter Your Name</label>
+            <input type="text" id="playerName" placeholder="Your Name">
+            <button onclick="joinRoom()">Join Room</button>
+        </div>
+        <div id="teamSection" style="display:none;">
+            <label for="teamMode">Team Assignment</label>
+            <select id="teamMode">
+                <option value="random">Randomize Teams</option>
+                <option value="manual">Manual Team Selection</option>
+            </select>
+            <button onclick="assignTeams()">Start Game</button>
+        </div>
+    </div>
+    <script>
+        let players = [];
+        function createRoom() {
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('roomCode').innerText = code;
+            document.getElementById('roomSection').style.display = 'block';
+        }
+        function joinRoom() {
+            const name = document.getElementById('playerName').value;
+            if (!name) { alert('Please enter your name!'); return; }
+            players.push(name);
+            document.getElementById('playerName').value = '';
+            updatePlayerList();
+        }
+        function updatePlayerList() {
+            let html = '<b>Players Joined:</b><ul>';
+            players.forEach(p => { html += `<li>${p}</li>`; });
+            html += '</ul>';
+            html += '<button onclick="showTeamSection()">Assign Teams & Start Game</button>';
+            document.getElementById('roomSection').innerHTML += html;
+        }
+        function showTeamSection() {
+            document.getElementById('teamSection').style.display = 'block';
+            document.getElementById('roomSection').style.display = 'none';
+        }
+        function assignTeams() {
+            const teamMode = document.getElementById('teamMode').value;
+            let teams = [];
+            if (teamMode === 'random') {
+                let shuffled = [...players].sort(() => 0.5 - Math.random());
+                let mid = Math.ceil(shuffled.length / 2);
+                teams = [shuffled.slice(0, mid), shuffled.slice(mid)];
+            } else {
+                // Manual team selection UI can be added here
+                teams = [players]; // All in one team for now
+            }
+            localStorage.setItem('charades_players', JSON.stringify(players));
+            localStorage.setItem('charades_teams', JSON.stringify(teams));
+            window.location.href = '/emoji-charades-game.html';
+        }
+    </script>
+</body>
+</html>

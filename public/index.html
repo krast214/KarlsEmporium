@@ -110,52 +110,32 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <header style="background: none; box-shadow: none; text-align: center; padding: 2.2rem 0 1.2rem 0;">
-            <img src="/images/karls-emporium-logo.png" alt="Karl's Emporium Logo" style="max-width: 420px; width: 90vw; height: auto; margin: 0 auto; display: block;" />
-        </header>
-
-        <section id="game-selection">
-            <h2 style="color:#fff;">Choose Your Adventure:</h2>
-            <div class="game-list">
-                <div class="game-card" id="game-dice-tower">
-                    <span class="fantasy-icon">
-                      <!-- Modern, clean dice tower SVG: simple, geometric, and neutral gray/black -->
-                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="20" y="18" width="20" height="28" rx="4" fill="#f4f4f7" stroke="#23213a" stroke-width="2.5"/>
-                        <rect x="25" y="10" width="10" height="10" rx="2" fill="#e0e7ef" stroke="#23213a" stroke-width="2"/>
-                        <rect x="28" y="6" width="4" height="6" rx="1.5" fill="#23213a"/>
-                        <rect x="26.5" y="28" width="3" height="8" rx="1" fill="#23213a"/>
-                        <rect x="30.5" y="28" width="3" height="8" rx="1" fill="#23213a"/>
-                        <circle cx="30" cy="44" r="2.5" fill="#23213a"/>
-                        <ellipse cx="30" cy="50" rx="8" ry="3" fill="#23213a" opacity="0.10"/>
-                      </svg>
-                    </span>
-                    <h3>Dice Tower</h3>
-                    <p>A fast-paced game of dice rolling, city building, and shrewd investments. Will you build the grandest city?</p>
-                    <a href="/games/dicetower/" class="play-button">Play</a>
-                </div>
-                <div class="game-card" id="game-silent-karaoke">
-                    <img src="/images/silent-karaoke-mic.png" alt="Silent Karaoke Mascot" style="width: 70px; height: 70px; margin-bottom: 10px; filter: drop-shadow(0 2px 8px #e11d4888); border-radius: 16px; background: #d0ff1c;" />
-                    <h3>Silent Karaoke</h3>
-                    <p>The party game where you perform songs or phrases—without making a sound! Lip-sync, gesture, and mime while your friends race to guess. No humming, no mouthing words, just pure silent performance. Can you make yourself heard without a voice?</p>
-                    <a href="/games/silent-karaoke/" class="play-button">Play</a>
-                </div>
-                <!-- Add more game cards here in the future -->
-                <!--
-                <div class="game-card" id="game-another-game">
-                    <img src="/images/another-game-icon.png" alt="Another Game Icon">
-                    <h3>Another Game</h3>
-                    <p>Description of the other game.</p>
-                    <a href="/games/anothergame/" class="play-button">Play Another Game</a>
-                </div>
-                -->
-            </div>
-        </section>
-
-        <footer>
-            <p style="color:#fff;">© 2025 Karl's Gaming Emporium. All rights reserved (not really).</p>
-        </footer>
+    <div class="main-menu-container">
+      <img src="/images/karls-emporium-logo.png" alt="Karl's Emporium Logo" class="main-logo" />
+      <div class="menu-buttons">
+        <button class="menu-btn game-night" onclick="showComingSoon('Game Night')">GAME NIGHT</button>
+        <button class="menu-btn quickplay" onclick="goToQuickplay()">QUICKPLAY</button>
+        <button class="menu-btn settings" onclick="showComingSoon('Settings')">SETTINGS</button>
+      </div>
+      <div class="quit-btn">QUIT</div>
     </div>
+    <div id="popup" class="popup" style="display:none;">
+      <div class="popup-content">
+        <span id="popup-message"></span>
+        <button onclick="closePopup()" class="close-btn">Close</button>
+      </div>
+    </div>
+    <script>
+      function showComingSoon(feature) {
+        document.getElementById('popup-message').innerText = feature + ' - Coming Soon';
+        document.getElementById('popup').style.display = 'flex';
+      }
+      function closePopup() {
+        document.getElementById('popup').style.display = 'none';
+      }
+      function goToQuickplay() {
+        window.location.href = '/quickplay.html';
+      }
+    </script>
 </body>
 </html>

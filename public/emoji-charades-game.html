@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Charades Game</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .emoji-input {
+            font-size: 2em;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #A020F0;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .emoji-display {
+            font-size: 2.5em;
+            text-align: center;
+            margin: 16px 0;
+        }
+        .timer {
+            font-size: 1.2em;
+            color: #A020F0;
+            text-align: center;
+        }
+        .guess-form, .question-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .guess-form input, .question-form input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #A020F0;
+            font-size: 1em;
+        }
+        .guess-form button, .question-form button {
+            background: #A020F0;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .guesses, .questions {
+            margin-top: 16px;
+            font-size: 1em;
+        }
+        .hint {
+            color: #6366f1;
+            font-size: 1.1em;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .scoreboard {
+            margin-top: 24px;
+            font-size: 1.1em;
+            color: #23213a;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="promptSection">
+            <div><b>Prompt:</b> <span id="prompt">Movie Title</span></div>
+            <input type="text" id="emojiInput" class="emoji-input" maxlength="10" placeholder="Enter up to 10 emojis">
+            <button onclick="submitEmojis()">Submit Emojis</button>
+        </div>
+        <div id="emojiSection" style="display:none;">
+            <div class="emoji-display" id="emojiDisplay"></div>
+            <div class="timer">Time Left: <span id="timer">60</span>s</div>
+            <form class="guess-form" onsubmit="submitGuess(event)">
+                <input type="text" id="guessInput" placeholder="Your Guess">
+                <button type="submit">Submit Guess</button>
+            </form>
+            <form class="question-form" onsubmit="submitQuestion(event)">
+                <input type="text" id="questionInput" placeholder="Ask a yes/no question">
+                <button type="submit">Submit Question</button>
+            </form>
+            <div class="guesses" id="guesses"></div>
+            <div class="questions" id="questions"></div>
+            <div class="hint" id="hint" style="display:none;">Hint: Think about the category!</div>
+            <div class="scoreboard" id="scoreboard">Scores will be shown here.</div>
+        </div>
+    </div>
+    <script>
+let players = JSON.parse(localStorage.getItem('charades_players') || '[]');
+let teams = JSON.parse(localStorage.getItem('charades_teams') || '[]');
+let mode = 'quick'; // Set from lobby if needed
+let rounds = 3;
+let currentRound = 1;
+let scores = {};
+players.forEach(p => scores[p] = 0);
+let prompt = 'Movie Title'; // Example, replace with actual prompt
+let promptPlayer = players[0]; // Rotate per round
+let emojiString = '';
+let guessedCorrectly = false;
+let timeLeft = 60;
+let timerInterval;
+function submitEmojis() {
+    emojiString = document.getElementById('emojiInput').value;
+    if (!emojiString) { alert('Please enter emojis!'); return; }
+    document.getElementById('emojiDisplay').innerText = emojiString;
+    document.getElementById('promptSection').style.display = 'none';
+    document.getElementById('emojiSection').style.display = 'block';
+    startTimer();
+}
+function startTimer() {
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if (timeLeft === 30) {
+                document.getElementById('hint').style.display = 'block';
+            }
+        } else {
+            clearInterval(timerInterval);
+            endRound();
+        }
+    }, 1000);
+}
+function submitGuess(e) {
+    e.preventDefault();
+    const guess = document.getElementById('guessInput').value;
+    let result = 'Checking...';
+    // For demo, assume correct if guess matches prompt
+    if (guess.toLowerCase() === prompt.toLowerCase() && !guessedCorrectly) {
+        guessedCorrectly = true;
+        let points = Math.max(1, Math.floor(timeLeft / 10));
+        scores[promptPlayer] += points; // Prompt player gets points for speed
+        // Guesser gets 1 point (demo: always next player)
+        let guesser = players[(players.indexOf(promptPlayer)+1)%players.length];
+        scores[guesser] += 1;
+        result = `Correct! +${points} to ${promptPlayer}, +1 to ${guesser}`;
+        clearInterval(timerInterval);
+        endRound();
+    }
+    document.getElementById('guesses').innerHTML += `<div>Guess: <b>${guess}</b> - <span style='color:#A020F0;'>${result}</span></div>`;
+    document.getElementById('guessInput').value = '';
+    updateScoreboard();
+}
+function submitQuestion(e) {
+    e.preventDefault();
+    const question = document.getElementById('questionInput').value;
+    // For demo, always answer 'Maybe'
+    document.getElementById('questions').innerHTML += `<div>Q: <b>${question}</b> - <span style='color:#6366f1;'>Maybe</span></div>`;
+    document.getElementById('questionInput').value = '';
+}
+function updateScoreboard() {
+    let html = '<b>Scores:</b><br>';
+    for (let p in scores) {
+        html += `${p}: ${scores[p]}<br>`;
+    }
+    html += '<br><b>Teams:</b><br>';
+    teams.forEach((team, i) => {
+        html += `Team ${i+1}: ${team.join(', ')}<br>`;
+    });
+    document.getElementById('scoreboard').innerHTML = html;
+}
+function endRound() {
+    currentRound++;
+    if (currentRound > rounds) {
+        endGame();
+    } else {
+        // Rotate prompt player
+        promptPlayer = players[currentRound % players.length];
+        guessedCorrectly = false;
+        timeLeft = 60;
+        document.querySelector('.game-container').innerHTML += '<h2>Round Over!</h2><button onclick="location.reload()">Next Round</button>';
+    }
+}
+function endGame() {
+    let html = '<h2>Game Over!</h2><b>Final Scores:</b><br>';
+    for (let p in scores) {
+        html += `${p}: ${scores[p]}<br>`;
+    }
+    html += `<br><b>Teams:</b><br>`;
+    teams.forEach((team, i) => {
+        html += `Team ${i+1}: ${team.join(', ')}<br>`;
+    });
+    html += `<br>`;
+    if (mode === 'quick') {
+        html += `<button onclick="playAgain()">Play Again</button> <button onclick="goHome()">Home</button>`;
+    } else {
+        html += `<button onclick="nextGame()">Next Game</button>`;
+    }
+    document.querySelector('.game-container').innerHTML = html;
+}
+function playAgain() {
+    location.reload();
+}
+function goHome() {
+    window.location.href = '/index.html';
+}
+function nextGame() {
+    alert('Next game logic coming soon!');
+}
+updateScoreboard();
+</script>
+</body>
+</html>

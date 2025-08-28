@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Dashboard - Karl's Gaming Emporium</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #23213a;
+            color: #23213a;
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .host-container {
+            max-width: 600px;
+            margin: 80px auto;
+            background: rgba(250,250,250,0.97);
+            border-radius: 24px;
+            box-shadow: 0 4px 32px 0 #23213a22;
+            padding: 40px 32px;
+        }
+        h1 {
+            text-align: center;
+            color: #6366f1;
+            margin-bottom: 32px;
+        }
+        .step {
+            margin-bottom: 32px;
+        }
+        .step label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .step select, .step input, .step button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 2px solid #6366f1;
+            font-size: 1em;
+        }
+        .step button {
+            background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .step button:hover {
+            background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="host-container">
+        <h1>Host Game Setup</h1>
+        <form>
+            <div class="step">
+                <label for="mode">Game Mode</label>
+                <select id="mode" name="mode">
+                    <option value="quick">Quick Play</option>
+                    <option value="hosting">Hosting</option>
+                </select>
+            </div>
+            <div class="step">
+                <label for="choose-game">Choose Game(s)</label>
+                <select id="choose-game" name="choose-game" multiple>
+                    <option value="dicetower">Dice Tower</option>
+                    <option value="silent-karaoke">Silent Karaoke</option>
+                    <!-- Add more games here -->
+                </select>
+            </div>
+            <div class="step">
+                <label for="room-name">Create Room</label>
+                <input type="text" id="room-name" name="room-name" placeholder="Room Name" required>
+            </div>
+            <div class="step">
+                <button type="submit">Play Game</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

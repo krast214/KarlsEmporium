@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quickplay - Karl's Gaming Emporium</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .quickplay-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            margin-top: 60px;
+        }
+        .quickplay-btn {
+            font-family: 'Press Start 2P', 'Montserrat', sans-serif;
+            font-size: 1.5em;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px 0 #23213a33;
+            padding: 24px 48px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: transform 0.1s;
+        }
+        .quickplay-btn:active {
+            transform: scale(0.98);
+        }
+        .silent-karaoke { background: #FFB6C1; color: #23213a; }
+        .emoji-charades { background: #FFD700; color: #23213a; }
+        .category-chaos { background: #A020F0; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="quickplay-container">
+        <button class="quickplay-btn silent-karaoke">Silent Karaoke</button>
+        <button class="quickplay-btn emoji-charades">Emoji Charades</button>
+        <button class="quickplay-btn category-chaos">Category Chaos</button>
+    </div>
+    <script>
+      document.querySelector('.silent-karaoke').onclick = function() {
+        window.location.href = '/silent-karaoke.html';
+      };
+      document.querySelector('.emoji-charades').onclick = function() {
+        window.location.href = '/emoji-charades.html';
+      };
+      document.querySelector('.category-chaos').onclick = function() {
+        window.location.href = '/category-chaos.html';
+      };
+    </script>
+</body>
+</html>

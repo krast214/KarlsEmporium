@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Karaoke Game</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .song-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #A020F0;
+            text-align: center;
+        }
+        .timer {
+            font-size: 1.2em;
+            color: #6366f1;
+            text-align: center;
+        }
+        .guess-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .guess-form input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #6366f1;
+            font-size: 1em;
+        }
+        .guess-form button {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .guesses {
+            margin-top: 16px;
+            font-size: 1em;
+        }
+        .scoreboard {
+            margin-top: 24px;
+            font-size: 1.1em;
+            color: #23213a;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="song-title">Song: <span id="songName">Random Song</span></div>
+        <div class="timer">Time Left: <span id="timer">60</span>s</div>
+        <form class="guess-form" onsubmit="submitGuess(event)">
+            <input type="text" id="guessSong" placeholder="Song Name">
+            <input type="text" id="guessArtist" placeholder="Artist">
+            <button type="submit">Submit Guess</button>
+        </form>
+        <div class="guesses" id="guesses"></div>
+        <div class="scoreboard" id="scoreboard">Scores will be shown here.</div>
+    </div>
+    <script>
+let players = JSON.parse(localStorage.getItem('karaoke_players') || '[]');
+let teams = JSON.parse(localStorage.getItem('karaoke_teams') || '[]');
+let mode = localStorage.getItem('karaoke_mode') || 'free';
+let rounds = parseInt(localStorage.getItem('karaoke_rounds') || '5');
+let currentRound = parseInt(localStorage.getItem('karaoke_currentRound') || '1');
+let scores = {};
+players.forEach(p => scores[p] = 0);
+let songs = [
+  { name: 'Bohemian Rhapsody', artist: 'Queen' },
+  { name: 'Shape of You', artist: 'Ed Sheeran' },
+  { name: 'Bad Guy', artist: 'Billie Eilish' },
+  { name: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars' },
+  { name: 'Rolling in the Deep', artist: 'Adele' }
+];
+let singer = players[0]; // Rotate per round
+let timeLeft = 45;
+let timerInterval = setInterval(() => {
+    if (timeLeft > 0) {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+    } else {
+        clearInterval(timerInterval);
+        endRound();
+    }
+}, 1000);
+function submitGuess(e) {
+    e.preventDefault();
+    const song = document.getElementById('guessSong').value.trim().toLowerCase();
+    const artist = document.getElementById('guessArtist').value.trim().toLowerCase();
+    const correctSong = songs[0].name.toLowerCase(); // Demo: always first song
+    const correctArtist = songs[0].artist.toLowerCase();
+    let points = 0;
+    let result = '';
+    if (song === correctSong) { points++; result += 'Song correct! '; }
+    if (artist === correctArtist) { points++; result += 'Artist correct! '; }
+    if (points > 0) {
+        // Assign points to guesser (demo: always next player)
+        let guesser = players[(players.indexOf(singer)+1)%players.length];
+        scores[guesser] += points;
+        result += `+${points} point(s) to ${guesser}`;
+    } else {
+        result = 'Try again!';
+    }
+    const guessesDiv = document.getElementById('guesses');
+    guessesDiv.innerHTML += `<div>Song: <b>${song}</b>, Artist: <b>${artist}</b> - <span style='color:#A020F0;'>${result}</span></div>`;
+    document.getElementById('guessSong').value = '';
+    document.getElementById('guessArtist').value = '';
+    updateScoreboard();
+}
+function updateScoreboard() {
+    let html = '<b>Scores:</b><br>';
+    for (let p in scores) {
+        html += `${p}: ${scores[p]}<br>`;
+    }
+    html += '<br><b>Teams:</b><br>';
+    teams.forEach((team, i) => {
+        html += `Team ${i+1}: ${team.join(', ')}<br>`;
+    });
+    document.getElementById('scoreboard').innerHTML = html;
+}
+function endRound() {
+    currentRound++;
+    if (currentRound > rounds) {
+        endGame();
+    } else {
+        // Rotate singer
+        singer = players[currentRound % players.length];
+        timeLeft = 45;
+        document.querySelector('.game-container').innerHTML += '<h2>Round Over!</h2><button onclick="location.reload()">Next Round</button>';
+    }
+}
+function endGame() {
+    let html = '<h2>Game Over!</h2><b>Final Scores:</b><br>';
+    for (let p in scores) {
+        html += `${p}: ${scores[p]}<br>`;
+    }
+    html += `<br><b>Teams:</b><br>`;
+    teams.forEach((team, i) => {
+        html += `Team ${i+1}: ${team.join(', ')}<br>`;
+    });
+    html += `<br><button onclick="playAgain()">Play Again</button> <button onclick="goHome()">Home</button>`;
+    document.querySelector('.game-container').innerHTML = html;
+}
+function playAgain() {
+    location.reload();
+}
+function goHome() {
+    window.location.href = '/index.html';
+}
+updateScoreboard();
+</script>
+</body>
+</html>

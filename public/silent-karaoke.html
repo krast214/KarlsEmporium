@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Karaoke Lobby</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .karaoke-lobby {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .karaoke-lobby h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 16px;
+        }
+        .karaoke-lobby label {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .karaoke-lobby select, .karaoke-lobby input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 2px solid #6366f1;
+            font-size: 1em;
+        }
+        .karaoke-lobby button {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .karaoke-lobby button:hover {
+            background: #4f46e5;
+        }
+        .room-code {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #A020F0;
+            text-align: center;
+            margin: 16px 0;
+        }
+        #rulesSection {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="karaoke-lobby">
+        <h1>Silent Karaoke Lobby</h1>
+        <label for="mode">Game Mode</label>
+        <select id="mode">
+            <option value="teams">Teams</option>
+            <option value="free">Free for All</option>
+        </select>
+        <label for="rounds">Number of Rounds</label>
+        <input type="number" id="rounds" min="1" max="10" value="5">
+        <button onclick="createRoom()">Create Room</button>
+        <div id="roomSection" style="display:none;">
+            <div class="room-code">Room Code: <span id="roomCode"></span></div>
+            <label for="playerName">Enter Your Name</label>
+            <input type="text" id="playerName" placeholder="Your Name">
+            <button onclick="joinRoom()">Join Room</button>
+            <div id="playerList"></div>
+        </div>
+        <div id="teamSection" style="display:none;">
+            <label for="teamMode">Team Assignment</label>
+            <select id="teamMode">
+                <option value="random">Randomize Teams</option>
+                <option value="manual">Manual Team Selection</option>
+            </select>
+            <button onclick="assignTeams()">Start Game</button>
+        </div>
+        <div id="rulesSection" style="display:none;">
+            <h2>Silent Karaoke Rules</h2>
+            <ul>
+                <li>Player puts on headphones/earphones to start.</li>
+                <li>A random song will be shown to them and they have to sing along. 2 skips per round.</li>
+                <li>Sing for 1 minute. Others guess song and artist. 1 point each.</li>
+                <li>Teams: Priority to guess, then open to others. Free for all: 10s wait after wrong guess.</li>
+                <li>No lyrics for singer. Guesses are typed and submitted.</li>
+                <li>Round ends when both answers are correct or time runs out.</li>
+                <li>Scores shown at end of all rounds.</li>
+            </ul>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+        <button id="spotifyConnectBtn" style="background:#1DB954;color:#fff;font-weight:bold;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;margin-bottom:16px;">Connect to Spotify</button>
+    </div>
+    <script>
+let players = [];
+function createRoom() {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    document.getElementById('roomCode').innerText = code;
+    document.getElementById('roomSection').style.display = 'block';
+}
+function joinRoom() {
+    const name = document.getElementById('playerName').value;
+    if (!name) { alert('Please enter your name!'); return; }
+    players.push(name);
+    document.getElementById('playerName').value = '';
+    updatePlayerList();
+}
+function updatePlayerList() {
+    let html = '<b>Players Joined:</b><ul>';
+    players.forEach(p => { html += `<li>${p}</li>`; });
+    html += '</ul>';
+    html += '<button onclick="showTeamSection()">Assign Teams & Start Game</button>';
+    document.getElementById('roomSection').innerHTML += html;
+}
+function showTeamSection() {
+    document.getElementById('teamSection').style.display = 'block';
+    document.getElementById('roomSection').style.display = 'none';
+}
+function assignTeams() {
+    const teamMode = document.getElementById('teamMode').value;
+    let teams = [];
+    if (teamMode === 'random') {
+        let shuffled = [...players].sort(() => 0.5 - Math.random());
+        let mid = Math.ceil(shuffled.length / 2);
+        teams = [shuffled.slice(0, mid), shuffled.slice(mid)];
+    } else {
+        // Manual team selection UI can be added here
+        teams = [players]; // All in one team for now
+    }
+    localStorage.setItem('karaoke_players', JSON.stringify(players));
+    localStorage.setItem('karaoke_teams', JSON.stringify(teams));
+    window.location.href = '/silent-karaoke-game.html';
+}
+document.getElementById('spotifyConnectBtn').onclick = function() {
+  const clientId = '625af6db53864981a51b4e105172fced';
+  const redirectUri = encodeURIComponent('http://localhost:3000/callback');
+  const scopes = encodeURIComponent('user-read-private user-read-email playlist-read-private streaming');
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${scopes}&redirect_uri=${redirectUri}`;
+  window.location.href = authUrl;
+};
+    </script>
+</body>
+</html>

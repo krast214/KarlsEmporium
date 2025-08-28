@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Chaos Game</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .chaos-game {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .category {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #FF9800;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .timer {
+            font-size: 1.2em;
+            color: #23213a;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .answers input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #FF9800;
+            font-size: 1em;
+        }
+        .answers button {
+            background: #FF9800;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .answers button:hover {
+            background: #e67c00;
+        }
+        .scoreboard {
+            margin-top: 24px;
+            background: #f3e9d2;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .chaos-event {
+            color: #d32f2f;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chaos-game">
+        <div class="category" id="category"></div>
+        <div class="chaos-event" id="chaosEvent"></div>
+        <div class="timer" id="timer"></div>
+        <div class="answers">
+            <input type="text" id="answer" placeholder="Type your answer...">
+            <button onclick="submitAnswer()">Submit</button>
+        </div>
+        <div class="scoreboard" id="scoreboard"></div>
+    </div>
+    <script>
+        const categories = [
+            "Fruits starting with B",
+            "Famous robots",
+            "Movies with hats",
+            "Countries in Africa",
+            "Animals that fly",
+            "Video game characters",
+            "Things you find in a kitchen",
+            "Songs with colors in the title",
+            "Superheroes",
+            "Board games",
+            "Breakfast foods",
+            "Cartoon animals",
+            "Sports played with a ball",
+            "Brands of chocolate",
+            "Cities with rivers",
+            "Books with magic",
+            "TV shows from the 90s",
+            "Things that are yellow",
+            "Famous scientists",
+            "Words ending in 'ing'",
+            "Countries with mountains",
+            "Musical instruments",
+            "Types of pasta",
+            "Jobs you do outdoors",
+            "Things you wear on your feet"
+        ];
+        let chaosEvents = [
+            "Category changed! All previous answers are invalid!",
+            "Points inverted! Wrong answers now score!",
+            "Double points for next answer!",
+            "No vowels allowed!",
+            "Category changed again!",
+            "Fastest answer gets triple points!"
+        ];
+        let players = JSON.parse(localStorage.getItem('chaos_players') || '[]');
+        let rounds = parseInt(localStorage.getItem('chaos_rounds') || '3');
+        let scores = {};
+    let answersThisRound = [];
+        let currentRound = 1;
+        let currentCategory = '';
+        let timer = 15;
+        let chaosActive = false;
+        let chaosMsg = '';
+        players.forEach(p => scores[p] = 0);
+        function startRound() {
+            currentCategory = categories[Math.floor(Math.random() * categories.length)];
+            document.getElementById('category').innerText = `Round ${currentRound}: ${currentCategory}`;
+            document.getElementById('chaosEvent').innerText = '';
+            document.getElementById('answer').value = '';
+            timer = 15;
+            chaosActive = false;
+            chaosMsg = '';
+            answersThisRound = [];
+            updateScoreboard();
+            startTimer();
+            setTimeout(triggerChaos, Math.random() * 8000 + 3000); // Chaos event randomly between 3-11s
+        }
+        function startTimer() {
+            document.getElementById('timer').innerText = `Time left: ${timer}s`;
+            if (timer > 0) {
+                setTimeout(() => {
+                    timer--;
+                    startTimer();
+                }, 1000);
+            } else {
+                endRound();
+            }
+        }
+        function triggerChaos() {
+            if (chaosActive) return;
+            chaosActive = true;
+            chaosMsg = chaosEvents[Math.floor(Math.random() * chaosEvents.length)];
+            document.getElementById('chaosEvent').innerText = chaosMsg;
+            if (chaosMsg.includes('Category changed')) {
+                currentCategory = categories[Math.floor(Math.random() * categories.length)];
+                document.getElementById('category').innerText = `Round ${currentRound}: ${currentCategory}`;
+            }
+        }
+        function submitAnswer() {
+            const answer = document.getElementById('answer').value.trim();
+            let player = players[0]; // Single player for now
+            // Basic lint: min length
+            if (answer.length < 2) {
+                alert('Answer too short!');
+                return;
+            }
+            // Max length
+            if (answer.length > 30) {
+                alert('Answer too long!');
+                return;
+            }
+            // Only allow letters, numbers, spaces
+            if (!/^[a-zA-Z0-9 ]+$/.test(answer)) {
+                alert('Only letters, numbers, and spaces allowed!');
+                return;
+            }
+            // Block excessive repeated characters (e.g., "aaaaaa")
+            if (/([a-zA-Z0-9])\1{3,}/.test(answer)) {
+                alert('No excessive repeated characters!');
+                return;
+            }
+            // Block all-numeric answers
+            if (/^\d+$/.test(answer)) {
+                alert('Answer cannot be just numbers!');
+                return;
+            }
+            // No duplicates in round
+            if (answersThisRound.includes(answer.toLowerCase())) {
+                alert('Duplicate answer!');
+                return;
+            }
+            // Starts-with check for relevant categories
+            if (currentCategory.toLowerCase().includes('starting with')) {
+                let match = currentCategory.match(/starting with ([a-zA-Z])/i);
+                if (match && answer[0].toLowerCase() !== match[1].toLowerCase()) {
+                    alert(`Answer must start with '${match[1].toUpperCase()}'!`);
+                    return;
+                }
+            }
+            // Require vowels for some categories
+            if (/color|song|animal|food/i.test(currentCategory)) {
+                if (!/[aeiou]/i.test(answer)) {
+                    alert('Answer must contain at least one vowel!');
+                    return;
+                }
+            }
+            answersThisRound.push(answer.toLowerCase());
+            let points = 1;
+            if (chaosMsg.includes('Points inverted')) points = -1;
+            if (chaosMsg.includes('Double points')) points = 2;
+            if (chaosMsg.includes('Fastest answer')) points = 3;
+            if (chaosMsg.includes('No vowels')) {
+                if (/[aeiou]/i.test(answer)) points = 0;
+            }
+            scores[player] += points;
+            updateScoreboard();
+            document.getElementById('answer').value = '';
+        }
+        function updateScoreboard() {
+            let html = '<b>Scores:</b><ul>';
+            for (let p in scores) {
+                html += `<li>${p}: ${scores[p]}</li>`;
+            }
+            html += '</ul>';
+            document.getElementById('scoreboard').innerHTML = html;
+        }
+        function endRound() {
+            currentRound++;
+            if (currentRound > rounds) {
+                endGame();
+            } else {
+                startRound();
+            }
+        }
+        function endGame() {
+            let html = '<h2>Game Over!</h2><b>Final Scores:</b><ul>';
+            for (let p in scores) {
+                html += `<li>${p}: ${scores[p]}</li>`;
+            }
+            html += '</ul><button onclick="window.location.href=\'/index.html\'">Return Home</button>';
+            document.querySelector('.chaos-game').innerHTML = html;
+        }
+        window.onload = startRound;
+    </script>
+</body>
+</html>

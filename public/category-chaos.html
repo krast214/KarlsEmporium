@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Chaos Lobby</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            color: #23213a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .chaos-lobby {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #23213a22;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .chaos-lobby h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 16px;
+        }
+        .chaos-lobby label {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .chaos-lobby input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 2px solid #FF9800;
+            font-size: 1em;
+        }
+        .chaos-lobby button {
+            background: #FF9800;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .chaos-lobby button:hover {
+            background: #e67c00;
+        }
+        .room-code {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #FF9800;
+            text-align: center;
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="chaos-lobby">
+        <h1>Category Chaos Lobby</h1>
+        <label for="rounds">Number of Rounds</label>
+        <input type="number" id="rounds" min="1" max="10" value="3">
+        <button onclick="createRoom()">Create Room</button>
+        <div id="roomSection" style="display:none;">
+            <div class="room-code">Room Code: <span id="roomCode"></span></div>
+            <label for="playerName">Enter Your Name</label>
+            <input type="text" id="playerName" placeholder="Your Name">
+            <button onclick="joinRoom()">Join Room</button>
+        </div>
+    </div>
+    <script>
+        let players = [];
+        function createRoom() {
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('roomCode').innerText = code;
+            document.getElementById('roomSection').style.display = 'block';
+        }
+        function joinRoom() {
+            const name = document.getElementById('playerName').value;
+            if (!name) { alert('Please enter your name!'); return; }
+            players.push(name);
+            document.getElementById('playerName').value = '';
+            updatePlayerList();
+        }
+        function updatePlayerList() {
+            let html = '<b>Players Joined:</b><ul>';
+            players.forEach(p => { html += `<li>${p}</li>`; });
+            html += '</ul>';
+            html += '<button onclick="startGame()">Start Game</button>';
+            document.getElementById('roomSection').innerHTML += html;
+        }
+        function startGame() {
+            localStorage.setItem('chaos_players', JSON.stringify(players));
+            localStorage.setItem('chaos_rounds', document.getElementById('rounds').value);
+            window.location.href = '/category-chaos-game.html';
+        }
+    </script>
+</body>
+</html>
