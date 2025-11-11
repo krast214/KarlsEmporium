@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karl's Gaming Emporium</title>
-    <link rel="stylesheet" href="/style.css"> <!-- Main emporium styles -->
+    <title>Game Nyte</title>
+    <link rel="stylesheet" href="style.css"> <!-- Main emporium styles -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Dosis:wght@200..800&display=swap" rel="stylesheet">
+    <!--- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!--- icons -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css"/>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-      body {
+      /* body {
         background: linear-gradient(135deg, #23213a 0%, #6366f1 100%);
         min-height: 100vh;
         font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,26 +27,7 @@
       body::before {
         display: none;
       }
-      header {
-        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
-        color: #fff;
-        text-align: center;
-        padding: 2.2rem 0 1.2rem 0;
-        border-bottom-left-radius: 32px;
-        border-bottom-right-radius: 32px;
-        box-shadow: 0 4px 24px 0 #4f46e155;
-        position: relative;
-        font-family: 'Press Start 2P', 'UnifrakturCook', cursive;
-        letter-spacing: 1px;
-      }
-      header h1 {
-        font-size: 2.2em;
-        margin: 0;
-        font-family: 'Press Start 2P', 'UnifrakturCook', cursive;
-        letter-spacing: 2px;
-        text-shadow: 0 2px 12px #6366f1aa;
-        margin-bottom: 0.5em;
-      }
+
       .fantasy-icon {
         display: flex;
         justify-content: center;
@@ -105,12 +94,83 @@
         .game-list { flex-direction: column; gap: 18px; }
         .game-card { min-width: 90vw; max-width: 98vw; }
         .game-icon, .fantasy-icon svg { width: 44px; height: 44px; }
-        header { border-radius: 0 0 18px 18px; }
-      }
+      } */
     </style>
 </head>
 <body>
-    <div class="main-menu-container">
+  <header class="flex justify-between items-center">
+    <div id="header-logo">
+      <a>
+        <div>
+          <h2>GameNyte</h2>
+        </div>
+      </a>
+    </div>
+     <!-- Middle: Search Bar (hidden on small screens) -->
+    <div id="header-search" class="absolute left-1/2 transform -translate-x-1/2 w-full max-w-sm hidden lg:block">
+      <div class="relative">
+            <input
+              type="text"
+              placeholder="Search..."
+              class="w-full rounded-full py-2 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+            <button class="absolute right-3 top-1/2 -translate-y-1/2">
+              <i class="ph-bold ph-magnifying-glass"></i>
+            </button>
+      </div>
+    </div>
+    <div id="header-options">
+      <div>
+        <button id="header-help">?</i></button>
+      </div>
+      <div>
+        <button id="header-favorites">  
+          <i class="ph-bold ph-heart"></i>
+        </button>
+      </div>
+      <div>
+        <button id="header-login">Log In</button>
+      </div>
+    </div>
+  </header> 
+  <!-- Library of Games -->
+  <section class="mx-auto px-4 py-4">
+    <h2 class="py-2 text-2xl font-bold text-[#FFF7D6] mb-">All Games</h2>
+
+     <!-- Responsive grid: 1 col (sm), 3 col (md), 4 col (lg) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+      
+      <!-- Each grid item -->
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-blind-karaoke.png" alt="Image 1" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-emoji-charades.png" alt="Image 2" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-green.png" alt="Image 3" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-indigo.png" alt="Image 4" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-magenta.png" alt="Image 5" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-orange.png" alt="Image 6" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-red.png" alt="Image 7" class="object-contain">
+      </div>
+      <div class="flex justify-center items-end rounded-lg shadow-md p-4">
+        <img src="images/box-ph-teal.png" alt="Image 8" class="object-contain">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Old stuff, not sure if I should delete or not -->
+    <!-- <div class="main-menu-container">
       <img src="/images/karls-emporium-logo.png" alt="Karl's Emporium Logo" class="main-logo" />
       <div class="menu-buttons">
         <button class="menu-btn game-night" onclick="showComingSoon('Game Night')">GAME NIGHT</button>
@@ -124,7 +184,7 @@
         <span id="popup-message"></span>
         <button onclick="closePopup()" class="close-btn">Close</button>
       </div>
-    </div>
+    </div> -->
     <script>
       function showComingSoon(feature) {
         document.getElementById('popup-message').innerText = feature + ' - Coming Soon';
