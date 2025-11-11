@@ -1,5 +1,5 @@
 /* public/style.css - For Emporium Landing Page */
-
+/*
 body {
     font-family: 'Montserrat', 'Arial', sans-serif;
     margin: 0;
@@ -10,7 +10,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     position: relative;
-/* Figma vertical lines background effect */
+
 .vertical-lines-bg {
     position: absolute;
     width: 1800px;
@@ -94,6 +94,105 @@ body {
 .play-btn:hover {
     background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
 }
+} */
+
+
+
+/* INDEX.HTML */
+body {
+    margin: 0;    
+    /* Base colors (easy to change!) */
+    --bg-color: #1D002B;      /* background color */
+    --grid-color: #2C0D4C;    /* grid line color */
+    /* Grid size */
+    --grid-size: 20px;
+    background-color: var(--bg-color);
+    /* Create repeating grid lines */
+    background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-size: var(--grid-size) var(--grid-size);
+    font-family: "Bungee", sans-serif;
+}
+
+header {
+    width: auto;
+    height: 60px;
+    padding: 0 20px;
+    background-color: #A609F0;
+}
+
+header div {
+    height: 60px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+header h2 {
+    margin: 0;
+    font-size: 2em;
+    font-family: "Bungee", sans-serif;
+    letter-spacing: 2px;
+    color: #FFF7D6;
+}
+
+header input {
+    background-color: #650094;
+    color: white;
+    font-family: "Dosis", sans-serif;
+    font-weight: 700;
+}
+
+header input::placeholder {
+  color: #ececec; /* your custom color */
+  opacity: .5; /* optional: makes sure it's not semi-transparent */
+}
+
+#header-search i{
+    font-size: 21px;
+    color: #FFF7D6;
+}
+
+#header-help {
+    height: 40px;
+    background-color: #52C5FF;
+    font-family: bungee;
+    font-size: 25px;
+    margin: 0 5px;
+    padding: 0px 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;    
+}
+
+#header-favorites {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    background-color: #FF208B;
+    margin: 0 5px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+#header-favorites i {
+    font-size: 25px;
+    color: #FFF7D6;
+}
+
+#header-login {
+    height: 40px;
+    background-color: #BDF522;
+    font-family: bungee;
+    font-size: 16px;
+    padding: 0 20px;
+    margin-left: 5px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
 }
 
 .container {
@@ -104,24 +203,6 @@ body {
     flex-grow: 1;
 }
 
-
-header {
-    background: none;
-    color: #23213a;
-    padding: 2.2rem 0 1.2rem 0;
-    text-align: center;
-    margin-bottom: 0;
-    border: none;
-}
-
-
-header h1 {
-    margin: 0;
-    font-size: 2.5em;
-    font-family: 'Montserrat', 'Arial', sans-serif;
-    letter-spacing: 2px;
-    color: #23213a;
-}
 
 
 #game-selection h2 {
